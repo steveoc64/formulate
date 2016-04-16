@@ -14,12 +14,12 @@ func Templates(g func(string) (*temple.Template, error)) {
 }
 
 type EditField struct {
-	Span  int
-	ID    string
-	Label string
-	Type  string
-	Name  string
-	Value string
+	Span   int
+	Label  string
+	Type   string
+	Name   string
+	Value  string
+	Extras string
 }
 
 type EditRow struct {
@@ -174,14 +174,15 @@ func (f *EditForm) Bind() {
 
 	for _, row := range f.Rows {
 		for _, field := range row.Fields {
-			print("binding ", field)
 
 			el := doc.QuerySelector(`[name="` + field.Name + `"]`)
-			print("element = ", el)
 			switch field.Type {
-			case "text", "textarea":
-				v := el.Value
-				print("value =", v)
+			case "text":
+				el2 := el.(*dom.HTMLInputElement)
+				print("text value of", field.Name, el2.Value)
+			case "textarea":
+				el2 := el.(*dom.HTMLTextAreaElement)
+				print("textarea value of", field.Name, el2.Value)
 			}
 		}
 	}
