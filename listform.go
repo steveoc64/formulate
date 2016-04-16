@@ -25,10 +25,9 @@ type ListForm struct {
 }
 
 // Init a new listform
-func (f *ListForm) New(icon string, title string, data interface{}) *ListForm {
+func (f *ListForm) New(icon string, title string) *ListForm {
 	f.Title = title
 	f.Icon = icon
-	f.Data = data
 	return f
 }
 
@@ -62,6 +61,8 @@ func (f *ListForm) Column(heading string, model string) *ListForm {
 
 // Render the form
 func (f *ListForm) Render(name string, selector string, data interface{}) {
+
+	f.Data = data
 
 	w := dom.GetWindow()
 	doc := w.Document()
@@ -160,7 +161,7 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 		// for each column, add a column renderer
 
 		for _, col := range f.Cols {
-			src += fmt.Sprintf("<td>{{.%s}}</td>\n", col.Model)
+			src += fmt.Sprintf("<td>{{if .%s}}{{.%s}}{{end}}</td>\n", col.Model, col.Model)
 		}
 
 		src += `      

@@ -1,19 +1,27 @@
 package formulate
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 
 	"honnef.co/go/js/dom"
 )
 
+type EditOption struct {
+	Key      int
+	Display  string
+	Selected bool
+}
+
 type EditField struct {
-	Span   int
-	Label  string
-	Type   string
-	Model  string
-	Value  string
-	Extras string
+	Span    int
+	Label   string
+	Type    string
+	Model   string
+	Value   string
+	Extras  string
+	Options []*EditOption
 }
 
 type EditRow struct {
@@ -29,6 +37,72 @@ type EditForm struct {
 	CancelCB func(dom.Event)
 	DeleteCB func(dom.Event)
 	SaveCB   func(dom.Event)
+}
+
+// Get the editfield of the given name
+func (f *EditForm) GetField(name string) *EditField {
+
+	for _, row := range f.Rows {
+		for _, field := range row.Fields {
+			if field.Model == name {
+				return field
+			}
+		}
+	}
+	return nil
+}
+
+// Apply options to a select field
+func (f *EditForm) SetSelectOptions(name string,
+	options interface{},
+	key string,
+	value string,
+	min int,
+	selectedKey int) {
+
+	fld := f.GetField(name)
+	if fld == nil {
+		print("Cannot find field by name", name)
+		return
+	}
+
+	// If min = 0, then we start with a blank option for "nothing selected"
+	fld.Options = append(fld.Options, &EditOption{
+		Key:     0,
+		Display: "",
+	})
+
+	// Now loop through the options and append to the options array
+	ptrType := reflect.TypeOf(options)
+	// print("options kind =", ptrType.Kind().String())
+	if ptrType.Kind() != reflect.Slice {
+		return
+	}
+	typ := ptrType.Elem()
+	// print("element kind =", typ.Kind().String())
+	if typ.Kind() != reflect.Struct {
+		return
+	}
+	ptrVal := reflect.ValueOf(options)
+	if ptrVal.IsNil() {
+		// print("contents of options is null")
+		return
+	}
+
+	olen := ptrVal.Len()
+
+	for i := 0; i < olen; i++ {
+		o := ptrVal.Index(i)
+		okey := int(o.FieldByName(key).Int())
+		oval := o.FieldByName(value).String()
+		// print("key/val", i, okey, oval)
+		fld.Options = append(fld.Options, &EditOption{
+			Key:      okey,
+			Display:  oval,
+			Selected: okey == selectedKey,
+		})
+	}
+
 }
 
 // Init a new editform
@@ -245,11 +319,12 @@ func (f *EditForm) Bind(data interface{}) {
 
 			switch field.Type {
 			case "text":
-				el2 := el.(*dom.HTMLInputElement)
-				setFromString(dataField, el2.Value)
+				setFromString(dataField, el.(*dom.HTMLInputElement).Value)
 			case "textarea":
-				el2 := el.(*dom.HTMLTextAreaElement)
-				setFromString(dataField, el2.Value)
+				setFromString(dataField, el.(*dom.HTMLTextAreaElement).Value)
+			case "select":
+				idx := el.(*dom.HTMLSelectElement).SelectedIndex
+				setFromInt(dataField, field.Options[idx].Key)
 			}
 		}
 	}
@@ -285,5 +360,31 @@ func setFromString(target reflect.Value, str string) {
 	default:
 		print("conversion of string to unknown type", k.String())
 		target.SetString(str)
+	}
+}
+
+func setFromInt(target reflect.Value, v int) {
+
+	k := target.Kind()
+	i := int64(v)
+	switch k {
+	case reflect.Bool:
+		print("conversion of int to bool")
+		target.SetBool(v != 0)
+	case reflect.Int:
+		// print("conversion of int to int")
+		target.SetInt(i)
+	case reflect.Float64:
+		print("conversion of int to float")
+		target.SetFloat(float64(i))
+	case reflect.Ptr:
+		print("conversion of int to ptr")
+		target.SetInt(i)
+	case reflect.String:
+		print("conversion of int to string")
+		target.SetString(fmt.Sprintf("%d", v))
+	default:
+		print("conversion of int to unknown type", k.String())
+		target.SetInt(i)
 	}
 }
