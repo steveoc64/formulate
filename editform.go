@@ -67,10 +67,12 @@ func (f *EditForm) SetSelectOptions(name string,
 	}
 
 	// If min = 0, then we start with a blank option for "nothing selected"
-	fld.Options = append(fld.Options, &EditOption{
-		Key:     0,
-		Display: "",
-	})
+	if min == 0 {
+		fld.Options = append(fld.Options, &EditOption{
+			Key:     0,
+			Display: "",
+		})
+	}
 
 	// Now loop through the options and append to the options array
 	ptrType := reflect.TypeOf(options)
@@ -159,6 +161,7 @@ func (r *EditRow) Add(span int, label string, t string, model string, extras str
 		Extras: extras,
 	}
 	r.Fields = append(r.Fields, f)
+	// print("add to row", span, label, t, model, extras)
 	return r
 }
 
@@ -190,8 +193,13 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 		if doit {
 			for _, row := range f.Rows {
 				for _, field := range row.Fields {
-					dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
-					field.Value = dataField.String()
+					switch field.Type {
+					case "div":
+						// is just a placeholder div field, so dont bind it
+					default:
+						dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
+						field.Value = dataField.String()
+					}
 				}
 			}
 		}
@@ -325,6 +333,8 @@ func (f *EditForm) Bind(data interface{}) {
 			case "select":
 				idx := el.(*dom.HTMLSelectElement).SelectedIndex
 				setFromInt(dataField, field.Options[idx].Key)
+			case "div":
+				// is just a placeholder, dont bind it
 			}
 		}
 	}
