@@ -2,11 +2,22 @@ package formulate
 
 import (
 	"fmt"
+	"html/template"
 	"reflect"
 	"strconv"
 
 	"honnef.co/go/js/dom"
 )
+
+type SelectOption struct {
+	ID   int
+	Name string
+}
+
+type SelectGroup struct {
+	Title   string
+	Options []SelectOption
+}
 
 type EditOption struct {
 	Key      int
@@ -15,13 +26,19 @@ type EditOption struct {
 }
 
 type EditField struct {
-	Span    int
-	Label   string
-	Type    string
-	Model   string
-	Value   string
-	Extras  string
-	Options []*EditOption
+	Span     int
+	Label    string
+	Type     string
+	Model    string
+	Value    string
+	Focusme  bool
+	Extras   template.CSS
+	Class    string
+	Step     string
+	Options  []*EditOption
+	Swapper  *Swapper
+	Selected int
+	Group    []SelectGroup
 }
 
 type EditRow struct {
@@ -37,6 +54,72 @@ type EditForm struct {
 	CancelCB func(dom.Event)
 	DeleteCB func(dom.Event)
 	SaveCB   func(dom.Event)
+}
+
+type Swapper struct {
+	Name     string
+	Selected int
+	Panels   []*Panel
+}
+
+func (s *Swapper) AddPanel(panelName string) *Panel {
+	p := Panel{
+		Name: panelName,
+	}
+	s.Panels = append(s.Panels, &p)
+	return &p
+}
+
+func (s *Swapper) Select(idx int) {
+	w := dom.GetWindow()
+	doc := w.Document()
+
+	// Show or unshow all panels by name
+	for i, p := range s.Panels {
+		el := doc.QuerySelector(fmt.Sprintf("[name=%s-%s]", s.Name, p.Name)).(*dom.HTMLDivElement)
+		if el != nil {
+			cl := el.Class()
+			if i == idx {
+				s.Selected = i
+				cl.Add("swapper-show")
+			} else {
+				cl.Remove("swapper-show")
+			}
+		}
+	}
+}
+
+func (s *Swapper) SelectByName(name string) {
+	w := dom.GetWindow()
+	doc := w.Document()
+
+	// Show or unshow all panels by name
+	for i, p := range s.Panels {
+		el := doc.QuerySelector(fmt.Sprintf("[name=%s-%s]", s.Name, p.Name)).(*dom.HTMLDivElement)
+		if el != nil {
+			cl := el.Class()
+			if p.Name == name {
+				s.Selected = i
+				cl.Add("swapper-show")
+			} else {
+				cl.Remove("swapper-show")
+			}
+		}
+	}
+}
+
+type Panel struct {
+	Name string
+	Div  *dom.HTMLDivElement
+	Rows []*EditRow
+}
+
+func (p *Panel) AddRow(s int) *EditRow {
+	r := EditRow{
+		Span: s,
+	}
+	p.Rows = append(p.Rows, &r)
+	return &r
 }
 
 // Get the editfield of the given name
@@ -154,14 +237,186 @@ func (r *EditRow) AddField(f EditField) *EditRow {
 // Add a field with params
 func (r *EditRow) Add(span int, label string, t string, model string, extras string) *EditRow {
 	f := &EditField{
-		Span:   span,
-		Label:  label,
-		Type:   t,
-		Model:  model,
-		Extras: extras,
+		Span:    span,
+		Label:   label,
+		Type:    t,
+		Model:   model,
+		Focusme: false,
+		Extras:  template.CSS(extras),
 	}
 	r.Fields = append(r.Fields, f)
 	// print("add to row", span, label, t, model, extras)
+	return r
+}
+
+// Add a Text input
+func (r *EditRow) AddInput(span int, label string, model string) *EditRow {
+	f := &EditField{
+		Span:    span,
+		Label:   label,
+		Type:    "text",
+		Focusme: false,
+		Model:   model,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
+// Add a Date input
+func (r *EditRow) AddDate(span int, label string, model string) *EditRow {
+	f := &EditField{
+		Span:    span,
+		Label:   label,
+		Type:    "date",
+		Focusme: false,
+		Model:   model,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
+// Add a Number input
+func (r *EditRow) AddNumber(span int, label string, model string, step string) *EditRow {
+	f := &EditField{
+		Span:    span,
+		Label:   label,
+		Type:    "number",
+		Focusme: false,
+		Step:    step,
+		Model:   model,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
+// Add a Radio input
+func (r *EditRow) AddRadio(span int, label string, model string,
+	options interface{}, key string, value string, selectedKey int) *EditRow {
+	fld := &EditField{
+		Span:    span,
+		Label:   label,
+		Type:    "radio",
+		Focusme: false,
+		Model:   model,
+	}
+
+	// Now loop through the options and append to the options array
+	ptrVal := reflect.ValueOf(options)
+
+	olen := ptrVal.Len()
+
+	for i := 0; i < olen; i++ {
+		o := ptrVal.Index(i)
+		okey := int(o.FieldByName(key).Int())
+		oval := o.FieldByName(value).String()
+		fld.Options = append(fld.Options, &EditOption{
+			Key:      okey,
+			Display:  oval,
+			Selected: okey == selectedKey,
+		})
+	}
+
+	r.Fields = append(r.Fields, fld)
+	return r
+}
+
+// Add a panel swapper
+func (r *EditRow) AddSwapper(span int, label string, swapper *Swapper) *EditRow {
+
+	fld := &EditField{
+		Span:    span,
+		Label:   label,
+		Type:    "swapper",
+		Swapper: swapper,
+	}
+
+	r.Fields = append(r.Fields, fld)
+	return r
+}
+
+// Add a Select element
+func (r *EditRow) AddSelect(span int, label string, model string,
+	options interface{}, key string, value string,
+	min int, selectedKey int) *EditRow {
+
+	fld := &EditField{
+		Span:     span,
+		Label:    label,
+		Type:     "select",
+		Focusme:  false,
+		Model:    model,
+		Selected: selectedKey,
+	}
+
+	// If min = 0, then we start with a blank option for "nothing selected"
+	if min == 0 {
+		fld.Options = append(fld.Options, &EditOption{
+			Key:     0,
+			Display: "",
+		})
+	}
+
+	// Now loop through the options and append to the options array
+	ptrVal := reflect.ValueOf(options)
+
+	olen := ptrVal.Len()
+
+	for i := 0; i < olen; i++ {
+		o := ptrVal.Index(i)
+		okey := int(o.FieldByName(key).Int())
+		oval := o.FieldByName(value).String()
+		fld.Options = append(fld.Options, &EditOption{
+			Key:      okey,
+			Display:  oval,
+			Selected: okey == selectedKey,
+		})
+	}
+
+	r.Fields = append(r.Fields, fld)
+	return r
+}
+
+// Add a GroupedSelect element
+func (r *EditRow) AddGroupedSelect(span int, label string, model string,
+	group []SelectGroup, selectedKey int) *EditRow {
+
+	fld := &EditField{
+		Span:     span,
+		Label:    label,
+		Type:     "groupselect",
+		Focusme:  false,
+		Model:    model,
+		Group:    group,
+		Selected: selectedKey,
+	}
+	r.Fields = append(r.Fields, fld)
+	return r
+}
+
+// Add a Textarea
+func (r *EditRow) AddTextarea(span int, label string, model string) *EditRow {
+	f := &EditField{
+		Span:    span,
+		Label:   label,
+		Type:    "textarea",
+		Focusme: false,
+		Model:   model,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
+// Add a Div
+func (r *EditRow) AddDiv(span int, label string, model string, class string) *EditRow {
+	f := &EditField{
+		Span:    span,
+		Label:   label,
+		Type:    "div",
+		Focusme: false,
+		Model:   model,
+		Class:   class,
+	}
+	r.Fields = append(r.Fields, f)
 	return r
 }
 
@@ -193,12 +448,29 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 		if doit {
 			for _, row := range f.Rows {
 				for _, field := range row.Fields {
-					switch field.Type {
-					case "div":
-						// is just a placeholder div field, so dont bind it
-					default:
-						dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
-						field.Value = dataField.String()
+					if field.Model != "" {
+						switch field.Type {
+						case "div":
+							// is just a placeholder div field, so dont bind it
+						default:
+							dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
+							switch dataField.Kind() {
+							case reflect.Float64:
+								print(field.Model + " of type " + dataField.Kind().String())
+								field.Value = fmt.Sprintf("%.2f", dataField.Float())
+							case reflect.Int:
+								// print(field.Model + " of type " + dataField.Kind().String())
+								field.Value = fmt.Sprintf("%d", dataField.Int())
+							case reflect.Ptr:
+								print(field.Model + " of type " + dataField.Kind().String())
+								field.Value = dataField.String()
+							case reflect.String:
+								field.Value = dataField.String()
+							default:
+								print(field.Model + " of type " + dataField.Kind().String())
+								field.Value = dataField.String()
+							}
+						}
 					}
 				}
 			}
@@ -322,7 +594,8 @@ func (f *EditForm) Bind(data interface{}) {
 	for _, row := range f.Rows {
 		for _, field := range row.Fields {
 
-			el := doc.QuerySelector(`[name="` + field.Model + `"]`)
+			name := `[name="` + field.Model + `"]`
+			el := doc.QuerySelector(name)
 			dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
 
 			switch field.Type {
@@ -333,8 +606,65 @@ func (f *EditForm) Bind(data interface{}) {
 			case "select":
 				idx := el.(*dom.HTMLSelectElement).SelectedIndex
 				setFromInt(dataField, field.Options[idx].Key)
+			case "radio":
+				els := doc.QuerySelectorAll(name)
+				for _, rel := range els {
+					ie := rel.(*dom.HTMLInputElement)
+					if ie.Checked {
+						print("radio", name, "value =", ie.Value)
+						setFromString(dataField, ie.Value)
+						break
+					}
+				}
+			case "number":
+				setFromString(dataField, el.(*dom.HTMLInputElement).Value)
+			case "date":
+				ie := el.(*dom.HTMLInputElement)
+				print("TODO - bind from date field", ie.Value)
 			case "div":
 				// is just a placeholder, dont bind it
+			case "swapper":
+				// Swapper has a slice of panels
+				for _, p := range field.Swapper.Panels {
+					// Panel has a slice of rows
+					for _, r := range p.Rows {
+						// Row has a slice of fields
+						for _, f := range r.Fields {
+							name := `[name="` + f.Model + `"]`
+							el := doc.QuerySelector(name)
+							dataField := reflect.Indirect(ptrVal).FieldByName(f.Model)
+							switch f.Type {
+							case "text":
+								setFromString(dataField, el.(*dom.HTMLInputElement).Value)
+							case "textarea":
+								setFromString(dataField, el.(*dom.HTMLTextAreaElement).Value)
+							case "select":
+								idx := el.(*dom.HTMLSelectElement).SelectedIndex
+								setFromInt(dataField, f.Options[idx].Key)
+							case "radio":
+								els := doc.QuerySelectorAll(name)
+								for _, rel := range els {
+									ie := rel.(*dom.HTMLInputElement)
+									if ie.Checked {
+										print("swapper radio", name, "value =", ie.Value)
+										setFromString(dataField, ie.Value)
+										break
+									}
+								}
+							case "number":
+								setFromString(dataField, el.(*dom.HTMLInputElement).Value)
+							case "date":
+								ie := el.(*dom.HTMLInputElement)
+								print("TODO - bind swapper from date field", ie.Value)
+							}
+
+						}
+					}
+
+				}
+
+			default:
+				print("TODO - bind from ", field.Type)
 			}
 		}
 	}
