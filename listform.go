@@ -59,15 +59,26 @@ func (f *ListForm) Column(heading string, model string) *ListForm {
 	return f
 }
 
-// Render the form
+// Render the form using a template that we generate on the fly
 func (f *ListForm) Render(name string, selector string, data interface{}) {
 
 	f.Data = data
+	renderTemplateT(f.generateTemplate(name), selector, f)
+	f.decorate()
+}
+
+// Render the form using a custom template
+func (f *ListForm) RenderCustom(name string, selector string, data interface{}) {
+
+	f.Data = data
+	renderTemplate(name, selector, data)
+	f.decorate()
+}
+
+func (f *ListForm) decorate() {
 
 	w := dom.GetWindow()
 	doc := w.Document()
-
-	renderTemplateT(f.generateTemplate(name), selector, f)
 
 	if f.CancelCB == nil {
 		print("Error - No cancel callback")

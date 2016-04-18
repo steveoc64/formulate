@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"reflect"
 	"strconv"
+	"time"
 
 	"honnef.co/go/js/dom"
 )
@@ -456,18 +457,18 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 							dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
 							switch dataField.Kind() {
 							case reflect.Float64:
-								print(field.Model + " of type " + dataField.Kind().String())
+								// print(field.Model + " of type " + dataField.Kind().String())
 								field.Value = fmt.Sprintf("%.2f", dataField.Float())
 							case reflect.Int:
 								// print(field.Model + " of type " + dataField.Kind().String())
 								field.Value = fmt.Sprintf("%d", dataField.Int())
 							case reflect.Ptr:
-								print(field.Model + " of type " + dataField.Kind().String())
+								// print(field.Model + " of type " + dataField.Kind().String())
 								field.Value = dataField.String()
 							case reflect.String:
 								field.Value = dataField.String()
 							default:
-								print(field.Model + " of type " + dataField.Kind().String())
+								// print(field.Model + " of type " + dataField.Kind().String())
 								field.Value = dataField.String()
 							}
 						}
@@ -606,20 +607,26 @@ func (f *EditForm) Bind(data interface{}) {
 			case "select":
 				idx := el.(*dom.HTMLSelectElement).SelectedIndex
 				setFromInt(dataField, field.Options[idx].Key)
+			case "groupselect":
+				idx := el.(*dom.HTMLSelectElement).SelectedIndex
+				setFromInt(dataField, idx)
 			case "radio":
 				els := doc.QuerySelectorAll(name)
 				for _, rel := range els {
 					ie := rel.(*dom.HTMLInputElement)
 					if ie.Checked {
-						print("radio", name, "value =", ie.Value)
-						setFromString(dataField, ie.Value)
+						v, _ := strconv.Atoi(ie.Value)
+						setFromInt(dataField, v)
 						break
 					}
 				}
 			case "number":
-				setFromString(dataField, el.(*dom.HTMLInputElement).Value)
+				ie := el.(*dom.HTMLInputElement)
+				v, _ := strconv.Atoi(ie.Value)
+				setFromInt(dataField, v)
 			case "date":
 				ie := el.(*dom.HTMLInputElement)
+				setFromDate(dataField, ie.Value)
 				print("TODO - bind from date field", ie.Value)
 			case "div":
 				// is just a placeholder, dont bind it
@@ -646,16 +653,20 @@ func (f *EditForm) Bind(data interface{}) {
 								for _, rel := range els {
 									ie := rel.(*dom.HTMLInputElement)
 									if ie.Checked {
-										print("swapper radio", name, "value =", ie.Value)
-										setFromString(dataField, ie.Value)
+										// print("swapper radio", name, "value =", ie.Value)
+										v, _ := strconv.Atoi(ie.Value)
+										setFromInt(dataField, v)
 										break
 									}
 								}
 							case "number":
-								setFromString(dataField, el.(*dom.HTMLInputElement).Value)
+								ie := el.(*dom.HTMLInputElement)
+								v, _ := strconv.Atoi(ie.Value)
+								setFromInt(dataField, v)
 							case "date":
 								ie := el.(*dom.HTMLInputElement)
-								print("TODO - bind swapper from date field", ie.Value)
+								setFromDate(dataField, ie.Value)
+								// print("TODO - bind swapper from date field", ie.Value)
 							}
 
 						}
@@ -684,11 +695,11 @@ func setFromString(target reflect.Value, str string) {
 			target.SetBool(true)
 		}
 	case reflect.Int:
-		print("conversion of string to int")
+		// print("conversion of string to int")
 		i, _ := strconv.ParseInt(str, 0, 64)
 		target.SetInt(i)
 	case reflect.Float64:
-		print("conversion of string to float")
+		// print("conversion of string to float")
 		i, _ := strconv.ParseFloat(str, 64)
 		target.SetFloat(i)
 	case reflect.Ptr:
@@ -703,28 +714,54 @@ func setFromString(target reflect.Value, str string) {
 	}
 }
 
+const (
+	rfc3339DateLayout          = "2006-01-02"
+	rfc3339DatetimeLocalLayout = "2006-01-02T15:04:05.999999999"
+)
+
+func setFromDate(target reflect.Value, str string) {
+
+	thedate, _ := time.Parse(rfc3339DateLayout, str)
+	// print("Parse", str, "as", thedate.String())
+
+	k := target.Kind()
+	switch k {
+	case reflect.Ptr:
+		// print("target should be a *time.Time")
+		target.Set(reflect.ValueOf(&thedate))
+	case reflect.Struct:
+		// print("target should be a time.Time")
+		target.Set(reflect.ValueOf(thedate))
+	default:
+		print("conversion of date to unknown type", k.String())
+		// target.SetString(str)
+	}
+}
+
 func setFromInt(target reflect.Value, v int) {
 
 	k := target.Kind()
-	i := int64(v)
 	switch k {
 	case reflect.Bool:
-		print("conversion of int to bool")
+		// print("conversion of int to bool")
 		target.SetBool(v != 0)
 	case reflect.Int:
 		// print("conversion of int to int")
-		target.SetInt(i)
+		target.SetInt(int64(v))
 	case reflect.Float64:
-		print("conversion of int to float")
-		target.SetFloat(float64(i))
+		// print("conversion of int to float")
+		target.SetFloat(float64(int64(v)))
 	case reflect.Ptr:
 		print("conversion of int to ptr")
-		target.SetInt(i)
+		target.Set(reflect.ValueOf(&v))
+		// print("lets just try setting the *int directly from the value ", v)
+		// target.SetInt(int64(v))
+		// print("that gets us", target.String())
 	case reflect.String:
-		print("conversion of int to string")
+		// print("conversion of int to string")
 		target.SetString(fmt.Sprintf("%d", v))
 	default:
 		print("conversion of int to unknown type", k.String())
-		target.SetInt(i)
+		target.SetInt(int64(v))
 	}
 }
