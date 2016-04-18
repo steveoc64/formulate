@@ -11,6 +11,7 @@ import (
 type ListCol struct {
 	Heading string
 	Model   string
+	Format  string
 }
 
 type ListForm struct {
@@ -54,6 +55,17 @@ func (f *ListForm) Column(heading string, model string) *ListForm {
 	c := &ListCol{
 		Heading: heading,
 		Model:   model,
+	}
+	f.Cols = append(f.Cols, c)
+	return f
+}
+
+// Add a colunm to the listform in Date Format
+func (f *ListForm) DateColumn(heading string, model string) *ListForm {
+	c := &ListCol{
+		Heading: heading,
+		Model:   model,
+		Format:  "date",
 	}
 	f.Cols = append(f.Cols, c)
 	return f
