@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"time"
+	"unsafe"
 
 	"honnef.co/go/js/dom"
 )
@@ -472,6 +473,47 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 								field.Value = dataField.String()
 							}
 						}
+					} else { // field has no model - it could be a swapper
+						switch field.Type {
+						case "swapper":
+							// Swapper has a slice of panels, which has a slice of rows, with a slice of fields
+							for _, p := range field.Swapper.Panels {
+								for _, r := range p.Rows {
+									for _, f := range r.Fields {
+										// print("render swapper field", f.Model)
+										dataField := reflect.Indirect(ptrVal).FieldByName(f.Model)
+										switch dataField.Kind() {
+										case reflect.Float64:
+											f.Value = fmt.Sprintf("%.2f", dataField.Float())
+										case reflect.Int:
+											f.Value = fmt.Sprintf("%d", dataField.Int())
+										case reflect.Ptr:
+											// print("odd case of a swapper field being a ptr", f.Model, f.Type)
+											switch f.Type {
+											case "date":
+												f.Value = ""
+												ptr := unsafe.Pointer(dataField.Pointer())
+												if ptr != nil {
+													t := *(*time.Time)(ptr)
+													f.Value = t.Format(rfc3339DateLayout)
+												}
+											case "number":
+												f.Value = ""
+												ptr := unsafe.Pointer(dataField.Pointer())
+												if ptr != nil {
+													v := *(*int)(ptr)
+													f.Value = fmt.Sprintf("%d", v)
+												}
+											}
+										case reflect.String:
+											f.Value = dataField.String()
+										default:
+											f.Value = dataField.String()
+										}
+									}
+								}
+							}
+						}
 					}
 				}
 			}
@@ -752,7 +794,7 @@ func setFromInt(target reflect.Value, v int) {
 		// print("conversion of int to float")
 		target.SetFloat(float64(int64(v)))
 	case reflect.Ptr:
-		print("conversion of int to ptr")
+		// print("conversion of int to ptr")
 		target.Set(reflect.ValueOf(&v))
 		// print("lets just try setting the *int directly from the value ", v)
 		// target.SetInt(int64(v))
