@@ -627,6 +627,15 @@ func (f *EditForm) ActionGrid(template string, selector string, id interface{}, 
 	}
 }
 
+// Programmatically reset the Form title
+func (f *EditForm) SetTitle(title string) {
+	w := dom.GetWindow()
+	doc := w.Document()
+	el := doc.QuerySelector("#titletext")
+	print("setting element", el, " was =", el.InnerHTML())
+	el.SetInnerHTML(title)
+}
+
 // Read the DOM values of each field back into the data
 func (f *EditForm) Bind(data interface{}) {
 	// print("binding fields to data")
