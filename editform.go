@@ -424,6 +424,20 @@ func (r *EditRow) AddTextarea(span int, label string, model string) *EditRow {
 	return r
 }
 
+// Add a Textarea in readonly mode
+func (r *EditRow) AddDisplayArea(span int, label string, model string) *EditRow {
+	f := &EditField{
+		Span:     span,
+		Label:    label,
+		Type:     "textarea",
+		Focusme:  false,
+		Model:    model,
+		Readonly: true,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
 // Add a Div
 func (r *EditRow) AddCustom(span int, label string, model string, class string) *EditRow {
 	f := &EditField{
@@ -539,14 +553,14 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 
 	renderTemplate(template, selector, f)
 
-	if f.CancelCB == nil {
-		print("Error - No cancel callback")
-		return
-	}
-	if f.SaveCB == nil {
-		print("Error - No save callback")
-		return
-	}
+	// if f.CancelCB == nil {
+	// 	print("Error - No cancel callback")
+	// 	return
+	// }
+	// if f.SaveCB == nil {
+	// 	print("Error - No save callback")
+	// 	return
+	// }
 
 	// If there is a focusfield, then focus on it
 	if el := doc.QuerySelector("#focusme"); el != nil {
@@ -603,8 +617,10 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 	}
 
 	// plug in the save callback
-	if el := doc.QuerySelector(".md-save"); el != nil {
-		el.AddEventListener("click", false, f.SaveCB)
+	if f.SaveCB != nil {
+		if el := doc.QuerySelector(".md-save"); el != nil {
+			el.AddEventListener("click", false, f.SaveCB)
+		}
 	}
 }
 
