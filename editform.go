@@ -34,6 +34,7 @@ type EditField struct {
 	Model    string
 	Value    string
 	Focusme  bool
+	Readonly bool
 	Extras   template.CSS
 	Class    string
 	Step     string
@@ -254,11 +255,26 @@ func (r *EditRow) Add(span int, label string, t string, model string, extras str
 // Add a Text input
 func (r *EditRow) AddInput(span int, label string, model string) *EditRow {
 	f := &EditField{
-		Span:    span,
-		Label:   label,
-		Type:    "text",
-		Focusme: false,
-		Model:   model,
+		Span:     span,
+		Label:    label,
+		Type:     "text",
+		Focusme:  false,
+		Model:    model,
+		Readonly: false,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
+// Add a Text input
+func (r *EditRow) AddDisplay(span int, label string, model string) *EditRow {
+	f := &EditField{
+		Span:     span,
+		Label:    label,
+		Type:     "text",
+		Focusme:  false,
+		Model:    model,
+		Readonly: true,
 	}
 	r.Fields = append(r.Fields, f)
 	return r
@@ -409,7 +425,7 @@ func (r *EditRow) AddTextarea(span int, label string, model string) *EditRow {
 }
 
 // Add a Div
-func (r *EditRow) AddDiv(span int, label string, model string, class string) *EditRow {
+func (r *EditRow) AddCustom(span int, label string, model string, class string) *EditRow {
 	f := &EditField{
 		Span:    span,
 		Label:   label,
@@ -464,7 +480,7 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 								// print(field.Model + " of type " + dataField.Kind().String())
 								field.Value = fmt.Sprintf("%d", dataField.Int())
 							case reflect.Ptr:
-								// print(field.Model + " of type " + dataField.Kind().String())
+								print(field.Model + " of type " + dataField.Kind().String())
 								field.Value = dataField.String()
 							case reflect.String:
 								field.Value = dataField.String()
