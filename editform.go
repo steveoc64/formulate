@@ -609,7 +609,7 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 }
 
 // Add actions
-func (f *EditForm) ActionGrid(template string, selector string, id int, cb func(string)) {
+func (f *EditForm) ActionGrid(template string, selector string, id interface{}, cb func(string)) {
 
 	// print("add action grid")
 	w := dom.GetWindow()
