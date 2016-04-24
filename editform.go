@@ -38,6 +38,8 @@ type EditField struct {
 	Extras   template.CSS
 	Class    string
 	Step     string
+	IsFloat  bool
+	Decimals int
 	Options  []*EditOption
 	Swapper  *Swapper
 	Selected int
@@ -307,6 +309,22 @@ func (r *EditRow) AddNumber(span int, label string, model string, step string) *
 	return r
 }
 
+// Add a Floating Point Number input
+func (r *EditRow) AddDecimal(span int, label string, model string, decimals int) *EditRow {
+	f := &EditField{
+		Span:     span,
+		Label:    label,
+		Type:     "number",
+		Focusme:  false,
+		Step:     "1",
+		Model:    model,
+		IsFloat:  true,
+		Decimals: decimals,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
 // Add a Radio input
 func (r *EditRow) AddRadio(span int, label string, model string,
 	options interface{}, key string, value string, selectedKey int) *EditRow {
@@ -531,8 +549,14 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 												f.Value = ""
 												ptr := unsafe.Pointer(dataField.Pointer())
 												if ptr != nil {
-													v := *(*int)(ptr)
-													f.Value = fmt.Sprintf("%d", v)
+													if f.IsFloat {
+														v := *(*float64)(ptr)
+														f.Value = fmt.Sprintf("%f", v)
+													} else {
+														v := *(*int)(ptr)
+														f.Value = fmt.Sprintf("%d", v)
+
+													}
 												}
 											}
 										case reflect.String:
@@ -705,8 +729,19 @@ func (f *EditForm) Bind(data interface{}) {
 				}
 			case "number":
 				ie := el.(*dom.HTMLInputElement)
-				v, _ := strconv.Atoi(ie.Value)
-				setFromInt(dataField, v)
+				if field.IsFloat {
+					v, ferr := strconv.ParseFloat(ie.Value, 64)
+					if ferr != nil {
+						print("strconv.ParseFloat err ", ferr.Error())
+					}
+					setFromFloat(dataField, v)
+				} else {
+					v, ferr := strconv.Atoi(ie.Value)
+					if ferr != nil {
+						print("strconv.Atoi err ", ferr.Error())
+					}
+					setFromInt(dataField, v)
+				}
 			case "date":
 				ie := el.(*dom.HTMLInputElement)
 				setFromDate(dataField, ie.Value)
@@ -744,8 +779,19 @@ func (f *EditForm) Bind(data interface{}) {
 								}
 							case "number":
 								ie := el.(*dom.HTMLInputElement)
-								v, _ := strconv.Atoi(ie.Value)
-								setFromInt(dataField, v)
+								if field.IsFloat {
+									v, ferr := strconv.ParseFloat(ie.Value, 64)
+									if ferr != nil {
+										print("strconv.ParseFloat err ", ferr.Error())
+									}
+									setFromFloat(dataField, v)
+								} else {
+									v, ferr := strconv.Atoi(ie.Value)
+									if ferr != nil {
+										print("strconv.Atoi err ", ferr.Error())
+									}
+									setFromInt(dataField, v)
+								}
 							case "date":
 								ie := el.(*dom.HTMLInputElement)
 								setFromDate(dataField, ie.Value)
@@ -846,5 +892,30 @@ func setFromInt(target reflect.Value, v int) {
 	default:
 		print("conversion of int to unknown type", k.String())
 		target.SetInt(int64(v))
+	}
+}
+
+func setFromFloat(target reflect.Value, v float64) {
+
+	k := target.Kind()
+	switch k {
+	case reflect.Bool:
+		// print("conversion of int to bool")
+		target.SetBool(v != 0.0)
+	case reflect.Int:
+		// print("conversion of int to int")
+		target.SetInt(int64(v))
+	case reflect.Float64:
+		// print("conversion of int to float")
+		target.SetFloat(v)
+	case reflect.Ptr:
+		// print("conversion of float to ptr")
+		target.Set(reflect.ValueOf(&v))
+	case reflect.String:
+		// print("conversion of int to string")
+		target.SetString(fmt.Sprintf("%f", v))
+	default:
+		print("conversion of float to unknown type", k.String())
+		target.SetFloat(v)
 	}
 }
