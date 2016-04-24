@@ -702,6 +702,13 @@ func (f *EditForm) Bind(data interface{}) {
 	for _, row := range f.Rows {
 		for _, field := range row.Fields {
 
+			// If its a display only field, then dont bother binding it == much speed ++ safety
+			if field.Readonly {
+				// print("skipping field", field.Model)
+				continue
+			}
+			// print("processing field", field.Model)
+
 			name := `[name="` + field.Model + `"]`
 			el := doc.QuerySelector(name)
 			dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
