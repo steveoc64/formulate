@@ -672,7 +672,7 @@ func (f *EditForm) SetTitle(title string) {
 	w := dom.GetWindow()
 	doc := w.Document()
 	el := doc.QuerySelector("#titletext")
-	print("setting element", el, " was =", el.InnerHTML())
+	// print("setting element", el, " was =", el.InnerHTML())
 	el.SetInnerHTML(title)
 }
 
@@ -702,12 +702,14 @@ func (f *EditForm) Bind(data interface{}) {
 	for _, row := range f.Rows {
 		for _, field := range row.Fields {
 
-			// If its a display only field, then dont bother binding it == much speed ++ safety
+			// If its a display only field, or a custom div
+			// then dont bother binding it == much speed ++ safety
 			if field.Readonly {
-				// print("skipping field", field.Model)
 				continue
 			}
-			// print("processing field", field.Model)
+			if field.Type == "div" {
+				continue
+			}
 
 			name := `[name="` + field.Model + `"]`
 			el := doc.QuerySelector(name)
@@ -787,17 +789,25 @@ func (f *EditForm) Bind(data interface{}) {
 							case "number":
 								ie := el.(*dom.HTMLInputElement)
 								if field.IsFloat {
-									v, ferr := strconv.ParseFloat(ie.Value, 64)
-									if ferr != nil {
-										print("strconv.ParseFloat err ", ferr.Error())
+									if ie.Value == "" {
+										setFromFloat(dataField, 0.0)
+									} else {
+										v, ferr := strconv.ParseFloat(ie.Value, 64)
+										if ferr != nil {
+											print("strconv.ParseFloat err ", ferr.Error(), "field=", f, "val=", ie.Value)
+										}
+										setFromFloat(dataField, v)
 									}
-									setFromFloat(dataField, v)
 								} else {
-									v, ferr := strconv.Atoi(ie.Value)
-									if ferr != nil {
-										print("strconv.Atoi err ", ferr.Error())
+									if ie.Value == "" {
+										setFromInt(dataField, 0)
+									} else {
+										v, ferr := strconv.Atoi(ie.Value)
+										if ferr != nil {
+											print("strconv.Atoi err ", ferr.Error(), "val =", ie.Value, "model =", f.Model, "field =", f)
+										}
+										setFromInt(dataField, v)
 									}
-									setFromInt(dataField, v)
 								}
 							case "date":
 								ie := el.(*dom.HTMLInputElement)
