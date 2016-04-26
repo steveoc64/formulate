@@ -794,6 +794,7 @@ func (f *EditForm) Bind(data interface{}) {
 							case "radio":
 								els := doc.QuerySelectorAll(name)
 								for _, rel := range els {
+									print("having a look at rel", rel)
 									ie := rel.(*dom.HTMLInputElement)
 									if ie.Checked {
 										// print("swapper radio", name, "value =", ie.Value)
