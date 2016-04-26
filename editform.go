@@ -28,22 +28,23 @@ type EditOption struct {
 }
 
 type EditField struct {
-	Span     int
-	Label    string
-	Type     string
-	Model    string
-	Value    string
-	Focusme  bool
-	Readonly bool
-	Extras   template.CSS
-	Class    string
-	Step     string
-	IsFloat  bool
-	Decimals int
-	Options  []*EditOption
-	Swapper  *Swapper
-	Selected int
-	Group    []SelectGroup
+	Span      int
+	Label     string
+	Type      string
+	Model     string
+	Value     string
+	Focusme   bool
+	Readonly  bool
+	Extras    template.CSS
+	Class     string
+	Step      string
+	IsFloat   bool
+	Decimals  int
+	Options   []*EditOption
+	Swapper   *Swapper
+	Selected  int
+	Group     []SelectGroup
+	CodeBlock bool
 }
 
 type EditRow struct {
@@ -451,6 +452,21 @@ func (r *EditRow) AddDisplayArea(span int, label string, model string) *EditRow 
 		Focusme:  false,
 		Model:    model,
 		Readonly: true,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
+// Add a Textarea in codeblock mode
+func (r *EditRow) AddCodeBlock(span int, label string, model string) *EditRow {
+	f := &EditField{
+		Span:      span,
+		Label:     label,
+		Type:      "textarea",
+		Focusme:   false,
+		Model:     model,
+		Readonly:  true,
+		CodeBlock: true,
 	}
 	r.Fields = append(r.Fields, f)
 	return r
