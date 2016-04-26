@@ -528,7 +528,7 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 								// print(field.Model + " of type " + dataField.Kind().String())
 								field.Value = fmt.Sprintf("%d", dataField.Int())
 							case reflect.Ptr:
-								print(field.Model + " of type " + dataField.Kind().String())
+								// print(field.Model + " of type " + dataField.Kind().String())
 								field.Value = dataField.String()
 							case reflect.String:
 								field.Value = dataField.String()
