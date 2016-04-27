@@ -753,6 +753,10 @@ func (f *EditForm) Bind(data interface{}) {
 				setFromString(dataField, el.(*dom.HTMLTextAreaElement).Value)
 			case "select":
 				idx := el.(*dom.HTMLSelectElement).SelectedIndex
+				// print("here with field", field)
+				// print("datafield", dataField)
+				// print("idx", idx)
+				// print("opts key", field.Options[idx])
 				setFromInt(dataField, field.Options[idx].Key)
 			case "groupselect":
 				idx := el.(*dom.HTMLSelectElement).SelectedIndex
