@@ -45,6 +45,7 @@ type EditField struct {
 	Selected  int
 	Group     []SelectGroup
 	CodeBlock bool
+	BigText   bool
 }
 
 type EditRow struct {
@@ -438,6 +439,20 @@ func (r *EditRow) AddTextarea(span int, label string, model string) *EditRow {
 		Type:    "textarea",
 		Focusme: false,
 		Model:   model,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
+// Add a Textarea in bigtext mode
+func (r *EditRow) AddBigTextarea(span int, label string, model string) *EditRow {
+	f := &EditField{
+		Span:    span,
+		Label:   label,
+		Type:    "textarea",
+		Focusme: false,
+		Model:   model,
+		BigText: true,
 	}
 	r.Fields = append(r.Fields, f)
 	return r
