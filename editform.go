@@ -312,13 +312,13 @@ func (r *EditRow) AddNumber(span int, label string, model string, step string) *
 }
 
 // Add a Floating Point Number input
-func (r *EditRow) AddDecimal(span int, label string, model string, decimals int) *EditRow {
+func (r *EditRow) AddDecimal(span int, label string, model string, decimals int, step string) *EditRow {
 	f := &EditField{
 		Span:     span,
 		Label:    label,
 		Type:     "number",
 		Focusme:  false,
-		Step:     "1",
+		Step:     step,
 		Model:    model,
 		IsFloat:  true,
 		Decimals: decimals,
