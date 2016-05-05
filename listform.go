@@ -98,7 +98,7 @@ func (f *ListForm) Render(name string, selector string, data interface{}) {
 
 	f.Data = data
 	renderTemplateT(f.generateTemplate(name), selector, f)
-	f.decorate()
+	f.decorate(selector)
 }
 
 // Render the form using a custom template
@@ -106,10 +106,10 @@ func (f *ListForm) RenderCustom(name string, selector string, data interface{}) 
 
 	f.Data = data
 	renderTemplate(name, selector, data)
-	f.decorate()
+	f.decorate(selector)
 }
 
-func (f *ListForm) decorate() {
+func (f *ListForm) decorate(selector string) {
 
 	w := dom.GetWindow()
 	doc := w.Document()
@@ -137,7 +137,8 @@ func (f *ListForm) decorate() {
 	}
 
 	// Handlers on the table itself
-	if el := doc.QuerySelector(".data-table"); el != nil {
+	sel := doc.QuerySelector(selector)
+	if el := sel.QuerySelector(".data-table"); el != nil {
 
 		if f.RowCB != nil {
 			el.AddEventListener("click", false, func(evt dom.Event) {
