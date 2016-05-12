@@ -61,6 +61,7 @@ type EditForm struct {
 	CancelCB func(dom.Event)
 	DeleteCB func(dom.Event)
 	SaveCB   func(dom.Event)
+	PrintCB  func(dom.Event)
 }
 
 type Swapper struct {
@@ -219,6 +220,12 @@ func (f *EditForm) DeleteEvent(c func(dom.Event)) *EditForm {
 // Associate a save event with the editform
 func (f *EditForm) SaveEvent(c func(dom.Event)) *EditForm {
 	f.SaveCB = c
+	return f
+}
+
+// Associate a print event with the editform
+func (f *EditForm) PrintEvent(c func(dom.Event)) *EditForm {
+	f.PrintCB = c
 	return f
 }
 
@@ -675,6 +682,13 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 	if f.SaveCB != nil {
 		if el := doc.QuerySelector(".md-save"); el != nil {
 			el.AddEventListener("click", false, f.SaveCB)
+		}
+	}
+
+	// plug in the print callback
+	if f.PrintCB != nil {
+		if el := doc.QuerySelector(".data-print-btn"); el != nil {
+			el.AddEventListener("click", false, f.PrintCB)
 		}
 	}
 }

@@ -24,6 +24,7 @@ type ListForm struct {
 	RowCB       func(string)
 	CancelCB    func(dom.Event)
 	NewRowCB    func(dom.Event)
+	PrintCB     func(dom.Event)
 	HasSetWidth bool
 }
 
@@ -31,6 +32,7 @@ type ListForm struct {
 func (f *ListForm) New(icon string, title string) *ListForm {
 	f.Title = title
 	f.Icon = icon
+	f.PrintCB = nil
 	return f
 }
 
@@ -52,6 +54,12 @@ func (f *ListForm) CancelEvent(c func(dom.Event)) *ListForm {
 // Add new row
 func (f *ListForm) NewRowEvent(c func(dom.Event)) *ListForm {
 	f.NewRowCB = c
+	return f
+}
+
+// Add print button
+func (f *ListForm) PrintEvent(c func(dom.Event)) *ListForm {
+	f.PrintCB = c
 	return f
 }
 
@@ -136,6 +144,12 @@ func (f *ListForm) decorate(selector string) {
 		}
 	}
 
+	if f.PrintCB != nil {
+		if el := doc.QuerySelector(".data-print-btn"); el != nil {
+			el.AddEventListener("click", false, f.PrintCB)
+		}
+	}
+
 	// Handlers on the table itself
 	sel := doc.QuerySelector(selector)
 	if el := sel.QuerySelector(".data-table"); el != nil {
@@ -189,7 +203,15 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 			if f.NewRowCB != nil {
 				src += `
     <div class="column col-center">
-      <i class="data-add-btn fa fa-plus-circle fa-lg"></i>    
+      <i class="data-add-btn fa fa-plus-circle fa-lg no-print"></i>    
+    </div>    
+`
+			}
+
+			if f.PrintCB != nil {
+				src += `
+    <div class="column col-center">
+      <i class="data-print-btn fa fa-print fa-lg no-print"></i>    
     </div>    
 `
 			}
