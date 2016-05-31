@@ -6,6 +6,11 @@ import (
 	"honnef.co/go/js/dom"
 )
 
+type TreeData interface {
+	Subelements() []TreeData
+	Elements() []interface{}
+}
+
 type TreeForm struct {
 	Title       string
 	Icon        string
@@ -152,7 +157,7 @@ func (f *TreeForm) generateTemplate(name string) *temple.Template {
 		if doTitle {
 
 			src += `
-<div class="data-container css-treeview">
+<div class="data-container">
 	<div class="row data-table-header">
     <h3 class="column column-90" id="legend">
       <i class="fa {{.Icon}} fa-lg" style="font-size: 3rem"></i> 
@@ -180,7 +185,7 @@ func (f *TreeForm) generateTemplate(name string) *temple.Template {
 		}
 
 		src += `
-	    <ul>
+	    <ul class="css-treeview">
         <li><input type="checkbox" id="item-0" /><label for="item-0">This Folder is Closed By Default</label>
             <ul>
                 <li><input type="checkbox" id="item-0-0" /><label for="item-0-0">Ooops! A Nested Folder</label>
