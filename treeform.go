@@ -66,15 +66,16 @@ func (f *TreeForm) RowEvent(c func(string)) *TreeForm {
 }
 
 // Render the form using a template that we generate on the fly
-func (f *TreeForm) Render(name string, selector string, data interface{}) {
+func (f *TreeForm) Render(name string, selector string, data ...TreeData) {
 
 	f.Data = data
+	print("passed in treedata", data)
 	renderTemplateT(f.generateTemplate(name), selector, f)
 	f.decorate(selector)
 }
 
 // Render the form using a custom template
-func (f *TreeForm) RenderCustom(name string, selector string, data interface{}) {
+func (f *TreeForm) RenderCustom(name string, selector string, data ...TreeData) {
 
 	f.Data = data
 	renderTemplate(name, selector, data)
