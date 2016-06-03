@@ -6,9 +6,20 @@ import (
 	"honnef.co/go/js/dom"
 )
 
+type TreeCategories interface {
+	Len() int
+	Get(int) TreeData
+}
+
+type TreeElements interface {
+	Len() int
+	Render(int)
+}
+
 type TreeData interface {
-	Subelements() []TreeData
-	Elements() []interface{}
+	String() string
+	Categories() TreeCategories
+	Elements() TreeElements
 }
 
 type TreeForm struct {
