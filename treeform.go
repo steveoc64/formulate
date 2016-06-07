@@ -6,22 +6,29 @@ import (
 	"honnef.co/go/js/dom"
 )
 
+// TreeCategories ...
 type TreeCategories interface {
+	ID(int) int
 	Len() int
 	Get(int) TreeData
 }
 
+// TreeElements ...
 type TreeElements interface {
+	ID(int) int
 	Len() int
 	Render(int)
 }
 
+// TreeData ... any data that can be rendered as a tree
 type TreeData interface {
 	String() string
 	Categories() TreeCategories
 	Elements() TreeElements
+	Select(int)
 }
 
+// TreeForm ...
 type TreeForm struct {
 	Title       string
 	Icon        string
@@ -35,7 +42,7 @@ type TreeForm struct {
 	HasSetWidth bool
 }
 
-// Init a new listform
+// New - Init a new treeform
 func (f *TreeForm) New(icon string, title string) *TreeForm {
 	f.Title = title
 	f.Icon = icon
