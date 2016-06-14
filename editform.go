@@ -33,6 +33,7 @@ type EditField struct {
 	Type      string
 	Model     string
 	Value     string
+	Checked   bool
 	Focusme   bool
 	Readonly  bool
 	Extras    template.CSS
@@ -365,6 +366,21 @@ func (r *EditRow) AddRadio(span int, label string, model string,
 	return r
 }
 
+// Add a Checkbok input
+func (r *EditRow) AddCheck(span int, label string, model string) *EditRow {
+
+	fld := &EditField{
+		Span:    span,
+		Label:   label,
+		Type:    "checkbox",
+		Focusme: false,
+		Model:   model,
+	}
+
+	r.Fields = append(r.Fields, fld)
+	return r
+}
+
 // Add a panel swapper
 func (r *EditRow) AddSwapper(span int, label string, swapper *Swapper) *EditRow {
 
@@ -554,6 +570,8 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 								field.Value = dataField.String()
 							case reflect.String:
 								field.Value = dataField.String()
+							case reflect.Bool:
+								field.Checked = dataField.Bool()
 							default:
 								// print(field.Model + " of type " + dataField.Kind().String())
 								field.Value = dataField.String()
@@ -775,6 +793,11 @@ func (f *EditForm) Bind(data interface{}) {
 			case "groupselect":
 				idx := el.(*dom.HTMLSelectElement).SelectedIndex
 				setFromInt(dataField, idx)
+			case "checkbox":
+				print("binding into", dataField)
+				print("with checked", el.(*dom.HTMLInputElement).Checked)
+				print("with value", el.(*dom.HTMLInputElement).Value)
+				setFromBool(dataField, el.(*dom.HTMLInputElement).Checked)
 			case "radio":
 				els := doc.QuerySelectorAll(name)
 				for _, rel := range els {
@@ -824,6 +847,8 @@ func (f *EditForm) Bind(data interface{}) {
 							case "select":
 								idx := el.(*dom.HTMLSelectElement).SelectedIndex
 								setFromInt(dataField, f.Options[idx].Key)
+							case "checkbox":
+								setFromString(dataField, el.(*dom.HTMLInputElement).Value)
 							case "radio":
 								els := doc.QuerySelectorAll(name)
 								for _, rel := range els {
@@ -876,6 +901,41 @@ func (f *EditForm) Bind(data interface{}) {
 		}
 	}
 
+}
+
+func setFromBool(target reflect.Value, v bool) {
+
+	k := target.Kind()
+	switch k {
+	case reflect.Bool:
+		target.SetBool(v)
+	case reflect.Int:
+		i := int64(0)
+		if v {
+			i = int64(1)
+		}
+		target.SetInt(i)
+	case reflect.Float64:
+		// print("conversion of string to float")
+		i := 0.0
+		if v {
+			i = 1.0
+		}
+		target.SetFloat(i)
+	case reflect.String:
+		str := "true"
+		if !v {
+			str = "false"
+		}
+		target.SetString(str)
+	default:
+		print("conversion of bool to unknown type", k.String())
+		str := "true"
+		if !v {
+			str = "false"
+		}
+		target.SetString(str)
+	}
 }
 
 func setFromString(target reflect.Value, str string) {
