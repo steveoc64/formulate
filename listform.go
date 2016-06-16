@@ -16,9 +16,10 @@ type ListCol struct {
 }
 
 type ListForm struct {
-	Title       string
-	Icon        string
-	ID          int
+	Title string
+	Icon  string
+	ID    int
+	// KeyField    string
 	Data        interface{}
 	Cols        []*ListCol
 	RowCB       func(string)
@@ -33,6 +34,7 @@ func (f *ListForm) New(icon string, title string) *ListForm {
 	f.Title = title
 	f.Icon = icon
 	f.PrintCB = nil
+	// f.KeyField = "ID"
 	return f
 }
 
@@ -229,11 +231,12 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
     </tr>
   </thead>
   <tbody>
+  
 {{$cols := .Cols}}
 {{range .Data}}  
     <tr class="data-row" 
-        key="{{.ID}}">
-`
+        key="{{.ID}}">`
+
 		// for each column, add a column renderer
 
 		for _, col := range f.Cols {
