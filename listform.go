@@ -27,6 +27,7 @@ type ListForm struct {
 	NewRowCB    func(dom.Event)
 	PrintCB     func(dom.Event)
 	HasSetWidth bool
+	Draggable   bool
 }
 
 // Init a new listform
@@ -234,8 +235,15 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
   
 {{$cols := .Cols}}
 {{range .Data}}  
-    <tr class="data-row" 
-        key="{{.ID}}">`
+    <tr class="data-row`
+
+		if f.Draggable {
+			src += ` draggable" draggable="true"`
+		} else {
+			src += `"`
+		}
+
+		src += ` key="{{.ID}}">`
 
 		// for each column, add a column renderer
 
