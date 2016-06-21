@@ -794,7 +794,7 @@ func (f *EditForm) Bind(data interface{}) {
 				idx := el.(*dom.HTMLSelectElement).SelectedIndex
 				setFromInt(dataField, idx)
 			case "checkbox":
-				print("binding into", dataField)
+				//print("binding into", dataField)
 				print("with checked", el.(*dom.HTMLInputElement).Checked)
 				print("with value", el.(*dom.HTMLInputElement).Value)
 				setFromBool(dataField, el.(*dom.HTMLInputElement).Checked)
