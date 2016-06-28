@@ -159,9 +159,9 @@ func (p *Panel) Paint(data interface{}) {
 		if doit {
 			for _, r := range p.Rows {
 				for _, f := range r.Fields {
-					print("render swapper field", f.Model)
+					// print("render swapper field", f.Model)
 					dataField := reflect.Indirect(ptrVal).FieldByName(f.Model)
-					print("Field Type", f.Type)
+					// print("Field Type", f.Type)
 					switch dataField.Kind() {
 					case reflect.Float64:
 						f.Value = fmt.Sprintf("%.2f", dataField.Float())
@@ -196,7 +196,7 @@ func (p *Panel) Paint(data interface{}) {
 					default:
 						f.Value = dataField.String()
 					}
-					print("Field", f.Type, f.Model, f.Value)
+					// print("Field", f.Type, f.Model, f.Value)
 					switch f.Type {
 					case "text", "number":
 						el := doc.QuerySelector(fmt.Sprintf("[name=%s]", f.Model)).(*dom.HTMLInputElement)
