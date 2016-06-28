@@ -123,12 +123,93 @@ type Panel struct {
 	Rows []*EditRow
 }
 
-func (p *Panel) AddRow(s int) *EditRow {
+func (p *Panel) Row(s int) *EditRow {
 	r := EditRow{
 		Span: s,
 	}
 	p.Rows = append(p.Rows, &r)
 	return &r
+}
+
+func (p *Panel) AddRow(s int) *EditRow {
+	return p.Row(s)
+}
+
+func (p *Panel) Paint(data interface{}) {
+
+	w := dom.GetWindow()
+	doc := w.Document()
+
+	if data != nil {
+		// Make sure the type of v is a pointer to a struct.
+		doit := true
+		ptrType := reflect.TypeOf(data)
+		if ptrType.Kind() != reflect.Ptr {
+			doit = false
+		}
+		typ := ptrType.Elem()
+		if typ.Kind() != reflect.Struct {
+			doit = false
+		}
+		ptrVal := reflect.ValueOf(data)
+		if ptrVal.IsNil() {
+			doit = false
+		}
+
+		if doit {
+			for _, r := range p.Rows {
+				for _, f := range r.Fields {
+					print("render swapper field", f.Model)
+					dataField := reflect.Indirect(ptrVal).FieldByName(f.Model)
+					print("Field Type", f.Type)
+					switch dataField.Kind() {
+					case reflect.Float64:
+						f.Value = fmt.Sprintf("%.2f", dataField.Float())
+					case reflect.Int:
+						f.Value = fmt.Sprintf("%d", dataField.Int())
+					case reflect.Ptr:
+						// print("odd case of a swapper field being a ptr", f.Model, f.Type)
+						switch f.Type {
+						case "date":
+							f.Value = ""
+							ptr := unsafe.Pointer(dataField.Pointer())
+							if ptr != nil {
+								t := *(*time.Time)(ptr)
+								f.Value = t.Format(rfc3339DateLayout)
+							}
+						case "number":
+							f.Value = ""
+							ptr := unsafe.Pointer(dataField.Pointer())
+							if ptr != nil {
+								if f.IsFloat {
+									v := *(*float64)(ptr)
+									f.Value = fmt.Sprintf("%f", v)
+								} else {
+									v := *(*int)(ptr)
+									f.Value = fmt.Sprintf("%d", v)
+
+								}
+							}
+						}
+					case reflect.String:
+						f.Value = dataField.String()
+					default:
+						f.Value = dataField.String()
+					}
+					print("Field", f.Type, f.Model, f.Value)
+					switch f.Type {
+					case "text", "number":
+						el := doc.QuerySelector(fmt.Sprintf("[name=%s]", f.Model)).(*dom.HTMLInputElement)
+						el.Value = f.Value
+					case "textarea":
+						el := doc.QuerySelector(fmt.Sprintf("[name=%s]", f.Model)).(*dom.HTMLTextAreaElement)
+						el.Value = f.Value
+					}
+				}
+			}
+		}
+	}
+
 }
 
 // Get the editfield of the given name
@@ -501,6 +582,21 @@ func (r *EditRow) AddCodeBlock(span int, label string, model string) *EditRow {
 		Span:      span,
 		Label:     label,
 		Type:      "textarea",
+		Focusme:   false,
+		Model:     model,
+		Readonly:  true,
+		CodeBlock: true,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
+// Add a Button
+func (r *EditRow) AddButton(span int, label string, model string) *EditRow {
+	f := &EditField{
+		Span:      span,
+		Label:     label,
+		Type:      "button",
 		Focusme:   false,
 		Model:     model,
 		Readonly:  true,
