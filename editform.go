@@ -890,9 +890,9 @@ func (f *EditForm) Bind(data interface{}) {
 				idx := el.(*dom.HTMLSelectElement).SelectedIndex
 				setFromInt(dataField, idx)
 			case "checkbox":
-				//print("binding into", dataField)
-				print("with checked", el.(*dom.HTMLInputElement).Checked)
-				print("with value", el.(*dom.HTMLInputElement).Value)
+				//print("checkbox binding into", dataField)
+				//print("with checked", el.(*dom.HTMLInputElement).Checked)
+				//print("with value", el.(*dom.HTMLInputElement).Value)
 				setFromBool(dataField, el.(*dom.HTMLInputElement).Checked)
 			case "radio":
 				els := doc.QuerySelectorAll(name)
@@ -906,6 +906,7 @@ func (f *EditForm) Bind(data interface{}) {
 				}
 			case "number":
 				ie := el.(*dom.HTMLInputElement)
+				print("number field binding", field)
 				if field.IsFloat {
 					v, ferr := strconv.ParseFloat(ie.Value, 64)
 					if ferr != nil {
