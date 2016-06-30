@@ -1000,6 +1000,105 @@ func (f *EditForm) Bind(data interface{}) {
 
 }
 
+// Read the DOM values of each field back into the data, just for this panel
+func (f *Panel) Bind(data interface{}) {
+	// print("binding fields to data")
+	w := dom.GetWindow()
+	doc := w.Document()
+
+	// Make sure the type of v is a pointer to a struct.
+	ptrType := reflect.TypeOf(data)
+	if ptrType.Kind() != reflect.Ptr {
+		print("form: Bind expects a pointer to a struct, but got: %T", data)
+		return
+	}
+	typ := ptrType.Elem()
+	if typ.Kind() != reflect.Struct {
+		print("form: Bind expects a pointer to a struct, but got: %T", data)
+		return
+	}
+	ptrVal := reflect.ValueOf(data)
+	if ptrVal.IsNil() {
+		print("form: Argument to Bind was nil")
+		return
+	}
+
+	for _, row := range f.Rows {
+		for _, field := range row.Fields {
+
+			// If its a display only field, or a custom div
+			// then dont bother binding it == much speed ++ safety
+			if field.Readonly {
+				continue
+			}
+			if field.Type == "div" {
+				continue
+			}
+
+			name := `[name="` + field.Model + `"]`
+			el := doc.QuerySelector(name)
+			dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
+
+			switch field.Type {
+			case "text":
+				setFromString(dataField, el.(*dom.HTMLInputElement).Value)
+			case "textarea":
+				setFromString(dataField, el.(*dom.HTMLTextAreaElement).Value)
+			case "select":
+				idx := el.(*dom.HTMLSelectElement).SelectedIndex
+				// print("here with field", field)
+				// print("datafield", dataField)
+				// print("idx", idx)
+				// print("opts key", field.Options[idx])
+				setFromInt(dataField, field.Options[idx].Key)
+			case "groupselect":
+				idx := el.(*dom.HTMLSelectElement).SelectedIndex
+				setFromInt(dataField, idx)
+			case "checkbox":
+				//print("checkbox binding into", dataField)
+				//print("with checked", el.(*dom.HTMLInputElement).Checked)
+				//print("with value", el.(*dom.HTMLInputElement).Value)
+				setFromBool(dataField, el.(*dom.HTMLInputElement).Checked)
+			case "radio":
+				els := doc.QuerySelectorAll(name)
+				for _, rel := range els {
+					ie := rel.(*dom.HTMLInputElement)
+					if ie.Checked {
+						v, _ := strconv.Atoi(ie.Value)
+						setFromInt(dataField, v)
+						break
+					}
+				}
+			case "number":
+				ie := el.(*dom.HTMLInputElement)
+				// print("number field binding", field)
+				if field.IsFloat {
+					v, ferr := strconv.ParseFloat(ie.Value, 64)
+					if ferr != nil {
+						print("strconv.ParseFloat err ", ferr.Error())
+					}
+					setFromFloat(dataField, v)
+				} else {
+					v, ferr := strconv.Atoi(ie.Value)
+					if ferr != nil {
+						print("strconv.Atoi err ", ferr.Error())
+					}
+					setFromInt(dataField, v)
+				}
+			case "date":
+				ie := el.(*dom.HTMLInputElement)
+				setFromDate(dataField, ie.Value)
+				print("TODO - bind from date field", ie.Value)
+			case "div":
+				// is just a placeholder, dont bind it
+			default:
+				print("TODO - bind from ", field.Type)
+			}
+		}
+	}
+
+}
+
 func setFromBool(target reflect.Value, v bool) {
 
 	k := target.Kind()
