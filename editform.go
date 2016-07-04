@@ -359,6 +359,20 @@ func (r *EditRow) AddInput(span int, label string, model string) *EditRow {
 	return r
 }
 
+// Add a Photo field
+func (r *EditRow) AddPhoto(span int, label string, model string) *EditRow {
+	f := &EditField{
+		Span:     span,
+		Label:    label,
+		Type:     "photo",
+		Focusme:  false,
+		Model:    model,
+		Readonly: false,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
 // Add a Text input
 func (r *EditRow) AddDisplay(span int, label string, model string) *EditRow {
 	f := &EditField{
@@ -652,6 +666,8 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 						switch field.Type {
 						case "div":
 							// is just a placeholder div field, so dont bind it
+						case "photo":
+							print("skip rendering of photo field for now")
 						default:
 							dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
 							switch dataField.Kind() {
@@ -875,6 +891,8 @@ func (f *EditForm) Bind(data interface{}) {
 			dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
 
 			switch field.Type {
+			case "photo":
+				print("skip binding of photo field for now")
 			case "text":
 				setFromString(dataField, el.(*dom.HTMLInputElement).Value)
 			case "textarea":
