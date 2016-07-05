@@ -669,7 +669,7 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 						case "div":
 							// is just a placeholder div field, so dont bind it
 						case "photo":
-							print("skip rendering of photo field for now", field)
+							print("Render the contents of the photo field after the DOM has been loaded")
 						default:
 							dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
 							switch dataField.Kind() {
@@ -746,6 +746,18 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 	}
 
 	renderTemplate(template, selector, f)
+
+	// If there are any photo fields, render them in here
+	for _, row := range f.Rows {
+		for _, field := range row.Fields {
+			if field.Model != "" && field.Type == "photo" {
+				print("post render", field)
+				dataField := reflect.Indirect(reflect.ValueOf(data)).FieldByName(field.Model)
+				el := doc.QuerySelector("[name=" + field.Model + "-Preview]").(*dom.HTMLImageElement)
+				el.Src = dataField.String()
+			}
+		}
+	}
 
 	// if f.CancelCB == nil {
 	// 	print("Error - No cancel callback")
@@ -894,8 +906,22 @@ func (f *EditForm) Bind(data interface{}) {
 			print("field =", field)
 			switch field.Type {
 			case "photo":
-				print("skip binding of photo field for now")
 				img := doc.QuerySelector(`[name="` + field.Model + `-Preview"]`).(*dom.HTMLImageElement)
+				// A Buffer can turn a string or a []byte into an io.Reader.
+				// buf := bytes.NewBufferString(img.Src)
+				// dec := base64.NewDecoder(base64.StdEncoding, buf)
+				// io.Copy(os.Stdout, dec)
+
+				// compress the img Src data
+				// var b bytes.Buffer
+				// gz := gzip.NewWriter(&b)
+				// gz.Write([]byte(img.Src))
+				// gz.Close()
+				// newImg := b.String()
+				// setFromString(dataField, newImg)
+				// print("compress from", len(img.Src), "to", len(newImg))
+				// setFromString(dataField, newImg)
+
 				setFromString(dataField, img.Src)
 			case "text":
 				setFromString(dataField, el.(*dom.HTMLInputElement).Value)
