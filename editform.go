@@ -30,25 +30,28 @@ type EditOption struct {
 }
 
 type EditField struct {
-	Span      int
-	Label     string
-	Type      string
-	Model     string
-	Value     string
-	Checked   bool
-	Focusme   bool
-	Readonly  bool
-	Extras    template.CSS
-	Class     string
-	Step      string
-	IsFloat   bool
-	Decimals  int
-	Options   []*EditOption
-	Swapper   *Swapper
-	Selected  int
-	Group     []SelectGroup
-	CodeBlock bool
-	BigText   bool
+	Span        int
+	Label       string
+	Type        string
+	Model       string
+	Value       string
+	Checked     bool
+	Focusme     bool
+	Readonly    bool
+	Extras      template.CSS
+	Class       string
+	Step        string
+	IsFloat     bool
+	Decimals    int
+	Options     []*EditOption
+	Swapper     *Swapper
+	Selected    int
+	Group       []SelectGroup
+	CodeBlock   bool
+	BigText     bool
+	PhotoUpload bool
+	Preview     bool
+	Thumbnail   bool
 }
 
 type EditRow struct {
@@ -364,12 +367,43 @@ func (r *EditRow) AddInput(span int, label string, model string) *EditRow {
 // Add a Photo field
 func (r *EditRow) AddPhoto(span int, label string, model string) *EditRow {
 	f := &EditField{
+		Span:        span,
+		Label:       label,
+		Type:        "photo",
+		PhotoUpload: true,
+		Focusme:     false,
+		Model:       model,
+		Readonly:    false,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
+// Add a Photo  preview field
+func (r *EditRow) AddPreview(span int, label string, model string) *EditRow {
+	f := &EditField{
 		Span:     span,
 		Label:    label,
 		Type:     "photo",
+		Preview:  true,
 		Focusme:  false,
 		Model:    model,
 		Readonly: false,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
+// Add a Photo  thumbnail field
+func (r *EditRow) AddThumbnail(span int, label string, model string) *EditRow {
+	f := &EditField{
+		Span:      span,
+		Label:     label,
+		Type:      "photo",
+		Thumbnail: true,
+		Focusme:   false,
+		Model:     model,
+		Readonly:  false,
 	}
 	r.Fields = append(r.Fields, f)
 	return r
@@ -906,23 +940,26 @@ func (f *EditForm) Bind(data interface{}) {
 			print("field =", field)
 			switch field.Type {
 			case "photo":
-				img := doc.QuerySelector(`[name="` + field.Model + `-Preview"]`).(*dom.HTMLImageElement)
-				// A Buffer can turn a string or a []byte into an io.Reader.
-				// buf := bytes.NewBufferString(img.Src)
-				// dec := base64.NewDecoder(base64.StdEncoding, buf)
-				// io.Copy(os.Stdout, dec)
+				if field.PhotoUpload {
 
-				// compress the img Src data
-				// var b bytes.Buffer
-				// gz := gzip.NewWriter(&b)
-				// gz.Write([]byte(img.Src))
-				// gz.Close()
-				// newImg := b.String()
-				// setFromString(dataField, newImg)
-				// print("compress from", len(img.Src), "to", len(newImg))
-				// setFromString(dataField, newImg)
+					img := doc.QuerySelector(`[name="` + field.Model + `-Preview"]`).(*dom.HTMLImageElement)
+					// A Buffer can turn a string or a []byte into an io.Reader.
+					// buf := bytes.NewBufferString(img.Src)
+					// dec := base64.NewDecoder(base64.StdEncoding, buf)
+					// io.Copy(os.Stdout, dec)
 
-				setFromString(dataField, img.Src)
+					// compress the img Src data
+					// var b bytes.Buffer
+					// gz := gzip.NewWriter(&b)
+					// gz.Write([]byte(img.Src))
+					// gz.Close()
+					// newImg := b.String()
+					// setFromString(dataField, newImg)
+					// print("compress from", len(img.Src), "to", len(newImg))
+					// setFromString(dataField, newImg)
+
+					setFromString(dataField, img.Src)
+				}
 			case "text":
 				setFromString(dataField, el.(*dom.HTMLInputElement).Value)
 			case "textarea":

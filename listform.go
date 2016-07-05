@@ -13,6 +13,7 @@ type ListCol struct {
 	Model   string
 	Format  string
 	Width   string
+	IsImg   bool
 }
 
 type ListForm struct {
@@ -28,6 +29,7 @@ type ListForm struct {
 	PrintCB     func(dom.Event)
 	HasSetWidth bool
 	Draggable   bool
+	HasImages   bool
 }
 
 // Init a new listform
@@ -104,12 +106,32 @@ func (f *ListForm) DateColumn(heading string, model string) *ListForm {
 	return f
 }
 
+// Add a colunm to the listform in Img Format
+func (f *ListForm) ImgColumn(heading string, model string) *ListForm {
+	c := &ListCol{
+		Heading: heading,
+		Model:   model,
+		IsImg:   true,
+	}
+	f.Cols = append(f.Cols, c)
+	f.HasImages = true
+	return f
+}
+
 // Render the form using a template that we generate on the fly
 func (f *ListForm) Render(name string, selector string, data interface{}) {
 
 	f.Data = data
 	renderTemplateT(f.generateTemplate(name), selector, f)
 	f.decorate(selector)
+
+	// if f.HasImages {
+	// 	rows := data.([]interface{})
+	// 	println("Add in image src")
+	// 	for k, v := range rows {
+	// 		println("row =", k, v)
+	// 	}
+	// }
 }
 
 // Render the form using a custom template
@@ -176,7 +198,6 @@ func (f *ListForm) decorate(selector string) {
 			})
 		}
 	}
-
 }
 
 func (f *ListForm) generateTemplate(name string) *temple.Template {
@@ -253,7 +274,15 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 				width = fmt.Sprintf(` width="%s"`, col.Width)
 			}
 
-			src += fmt.Sprintf("<td %s %s>{{if .%s}}{{.%s}}{{end}}</td>\n", width, col.Format, col.Model, col.Model)
+			if col.IsImg {
+				// src += fmt.Sprintf("<td %s %s>{{if .%s}}<img id=%s-{{.ID}} src=\"{{.%s}}\">{{end}}</td>\n",
+				// width, col.Format, col.Model, col.Model, col.Model)
+				src += fmt.Sprintf("<td %s %s>{{if .%s}}<img name=%s-{{.ID}}>{{end}}</td>\n",
+					width, col.Format, col.Model, col.Model)
+			} else {
+				src += fmt.Sprintf("<td %s %s>{{if .%s}}{{.%s}}{{end}}</td>\n",
+					width, col.Format, col.Model, col.Model)
+			}
 		}
 
 		src += `      
