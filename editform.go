@@ -11,11 +11,13 @@ import (
 	"honnef.co/go/js/dom"
 )
 
+// SelectOption - datatype for things that can appear in a select list
 type SelectOption struct {
 	ID   int
 	Name string
 }
 
+// SelectGroup - collection of SelectOptions
 type SelectGroup struct {
 	Title   string
 	Options []SelectOption
@@ -667,7 +669,7 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 						case "div":
 							// is just a placeholder div field, so dont bind it
 						case "photo":
-							print("skip rendering of photo field for now")
+							print("skip rendering of photo field for now", field)
 						default:
 							dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
 							switch dataField.Kind() {
@@ -889,10 +891,12 @@ func (f *EditForm) Bind(data interface{}) {
 			name := `[name="` + field.Model + `"]`
 			el := doc.QuerySelector(name)
 			dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
-
+			print("field =", field)
 			switch field.Type {
 			case "photo":
 				print("skip binding of photo field for now")
+				img := doc.QuerySelector(`[name="` + field.Model + `-Preview"]`).(*dom.HTMLImageElement)
+				setFromString(dataField, img.Src)
 			case "text":
 				setFromString(dataField, el.(*dom.HTMLInputElement).Value)
 			case "textarea":
