@@ -14,6 +14,7 @@ type ListCol struct {
 	Format  string
 	Width   string
 	IsImg   bool
+	IsBool  bool
 }
 
 type ListForm struct {
@@ -112,6 +113,18 @@ func (f *ListForm) ImgColumn(heading string, model string) *ListForm {
 		Heading: heading,
 		Model:   model,
 		IsImg:   true,
+	}
+	f.Cols = append(f.Cols, c)
+	f.HasImages = true
+	return f
+}
+
+// Add a colunm to the listform with a checkbox
+func (f *ListForm) BoolColumn(heading string, model string) *ListForm {
+	c := &ListCol{
+		Heading: heading,
+		Model:   model,
+		IsBool:  true,
 	}
 	f.Cols = append(f.Cols, c)
 	f.HasImages = true
@@ -275,10 +288,11 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 			}
 
 			if col.IsImg {
-				// src += fmt.Sprintf("<td %s %s>{{if .%s}}<img id=%s-{{.ID}} src=\"{{.%s}}\">{{end}}</td>\n",
-				// width, col.Format, col.Model, col.Model, col.Model)
 				src += fmt.Sprintf("<td %s %s>{{if .%s}}<img name=%s-{{.ID}}>{{end}}</td>\n",
 					width, col.Format, col.Model, col.Model)
+			} else if col.IsBool {
+				src += fmt.Sprintf("<td %s %s>{{if .%s}}<i class=\"fa fa-check fa-lg\">{{end}}</td>\n",
+					width, col.Format, col.Model)
 			} else {
 				src += fmt.Sprintf("<td %s %s>{{if .%s}}{{.%s}}{{end}}</td>\n",
 					width, col.Format, col.Model, col.Model)
