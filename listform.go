@@ -9,12 +9,13 @@ import (
 )
 
 type ListCol struct {
-	Heading string
-	Model   string
-	Format  string
-	Width   string
-	IsImg   bool
-	IsBool  bool
+	Heading  string
+	Model    string
+	Format   string
+	Width    string
+	IsImg    bool
+	IsBool   bool
+	MaxChars int
 }
 
 type ListForm struct {
@@ -31,6 +32,7 @@ type ListForm struct {
 	HasSetWidth bool
 	Draggable   bool
 	HasImages   bool
+	MaxChars    int
 }
 
 // Init a new listform
@@ -38,6 +40,7 @@ func (f *ListForm) New(icon string, title string) *ListForm {
 	f.Title = title
 	f.Icon = icon
 	f.PrintCB = nil
+	f.MaxChars = 120
 	// f.KeyField = "ID"
 	return f
 }
@@ -78,8 +81,9 @@ func (f *ListForm) RowEvent(c func(string)) *ListForm {
 // Add a colunm to the listform
 func (f *ListForm) Column(heading string, model string) *ListForm {
 	c := &ListCol{
-		Heading: heading,
-		Model:   model,
+		Heading:  heading,
+		Model:    model,
+		MaxChars: f.MaxChars,
 	}
 	f.Cols = append(f.Cols, c)
 	return f
@@ -88,9 +92,10 @@ func (f *ListForm) Column(heading string, model string) *ListForm {
 // Add a colunm to the listform with format
 func (f *ListForm) ColumnFormat(heading string, model string, format string) *ListForm {
 	c := &ListCol{
-		Heading: heading,
-		Model:   model,
-		Format:  format,
+		Heading:  heading,
+		Model:    model,
+		Format:   format,
+		MaxChars: f.MaxChars,
 	}
 	f.Cols = append(f.Cols, c)
 	return f
@@ -99,9 +104,10 @@ func (f *ListForm) ColumnFormat(heading string, model string, format string) *Li
 // Add a colunm to the listform in Date Format
 func (f *ListForm) DateColumn(heading string, model string) *ListForm {
 	c := &ListCol{
-		Heading: heading,
-		Model:   model,
-		Format:  "date",
+		Heading:  heading,
+		Model:    model,
+		Format:   "date",
+		MaxChars: f.MaxChars,
 	}
 	f.Cols = append(f.Cols, c)
 	return f

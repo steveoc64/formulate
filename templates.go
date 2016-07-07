@@ -2,6 +2,8 @@ package formulate
 
 import (
 	"errors"
+	"fmt"
+	"html/template"
 
 	"github.com/go-humble/temple/temple"
 	"honnef.co/go/js/dom"
@@ -36,11 +38,23 @@ func renderTemplateT(t *temple.Template, selector string, data interface{}) erro
 	w := dom.GetWindow()
 	doc := w.Document()
 
+	funcMap := template.FuncMap{
+		"Truncate": func(s string) string {
+			if len(s) > 120 {
+				return fmt.Sprintf("%s ...", s[:120])
+			}
+			return s
+		},
+	}
+
+	print(funcMap)
+
 	el := doc.QuerySelector(selector)
 	if el == nil {
 		print("Could not find selector", selector)
 		return errors.New("Invalid selector")
 	}
+
 	if err := t.ExecuteEl(el, data); err != nil {
 		print(err.Error())
 		return err
