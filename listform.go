@@ -145,11 +145,15 @@ func (f *ListForm) Render(name string, selector string, data interface{}) {
 	f.decorate(selector)
 
 	// if f.HasImages {
-	// 	rows := data.([]interface{})
-	// 	println("Add in image src")
-	// 	for k, v := range rows {
-	// 		println("row =", k, v)
+	// 	print("has images")
+	// 	for k, v := range data.([]interface{}) {
+	// 		println("k,v", k, v)
 	// 	}
+	// 	// rows := data.([]interface{})
+	// 	// println("Add in image src")
+	// 	// for k, v := range rows {
+	// 	// 	println("row =", k, v)
+	// 	// }
 	// }
 }
 
@@ -223,7 +227,7 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 
 	tmpl, err := generatedTemplates.GetTemplate(name)
 	if err != nil {
-		print("Generating template for", name)
+		// print("Generating template for", name)
 		// Template doesnt exist, so create it
 
 		src := ""
@@ -294,8 +298,8 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 			}
 
 			if col.IsImg {
-				src += fmt.Sprintf("<td %s %s>{{if .%s}}<img name=%s-{{.ID}}>{{end}}</td>\n",
-					width, col.Format, col.Model, col.Model)
+				src += fmt.Sprintf("<td %s %s>{{if .%s}}<img name=%s-{{.ID}} src={{.%s | safeURL}}>{{end}}</td>\n",
+					width, col.Format, col.Model, col.Model, col.Model)
 			} else if col.IsBool {
 				src += fmt.Sprintf("<td %s %s>{{if .%s}}<i class=\"fa fa-check fa-lg\">{{end}}</td>\n",
 					width, col.Format, col.Model)

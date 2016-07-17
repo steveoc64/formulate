@@ -2,7 +2,6 @@ package formulate
 
 import (
 	"errors"
-	"fmt"
 	"html/template"
 
 	"github.com/go-humble/temple/temple"
@@ -15,6 +14,12 @@ var generatedTemplates *temple.Group
 func Templates(g func(string) (*temple.Template, error)) {
 	gt = g
 	generatedTemplates = temple.NewGroup()
+
+	generatedTemplates.AddFunc("safeURL", func(u string) template.URL {
+		return template.URL(u)
+	})
+
+	print("setup templates", generatedTemplates)
 }
 
 // Load a template and attach it to the specified element in the doc
@@ -37,17 +42,6 @@ func renderTemplate(name string, selector string, data interface{}) error {
 func renderTemplateT(t *temple.Template, selector string, data interface{}) error {
 	w := dom.GetWindow()
 	doc := w.Document()
-
-	funcMap := template.FuncMap{
-		"Truncate": func(s string) string {
-			if len(s) > 120 {
-				return fmt.Sprintf("%s ...", s[:120])
-			}
-			return s
-		},
-	}
-
-	print(funcMap)
 
 	el := doc.QuerySelector(selector)
 	if el == nil {

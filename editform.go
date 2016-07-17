@@ -703,7 +703,7 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 						case "div":
 							// is just a placeholder div field, so dont bind it
 						case "photo":
-							print("Render the contents of the photo field after the DOM has been loaded")
+							// print("Render the contents of the photo field after the DOM has been loaded")
 						default:
 							dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
 							switch dataField.Kind() {
@@ -785,7 +785,7 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 	for _, row := range f.Rows {
 		for _, field := range row.Fields {
 			if field.Model != "" && field.Type == "photo" {
-				print("post render", field)
+				// print("post render", field)
 				dataField := reflect.Indirect(reflect.ValueOf(data)).FieldByName(field.Model)
 				el := doc.QuerySelector("[name=" + field.Model + "-Preview]").(*dom.HTMLImageElement)
 				el.Src = dataField.String()
