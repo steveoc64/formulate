@@ -787,8 +787,20 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 			if field.Model != "" && field.Type == "photo" {
 				// print("post render", field)
 				dataField := reflect.Indirect(reflect.ValueOf(data)).FieldByName(field.Model)
-				el := doc.QuerySelector("[name=" + field.Model + "-Preview]").(*dom.HTMLImageElement)
-				el.Src = dataField.String()
+				el := doc.QuerySelector("[name=" + field.Model + "-Preview]")
+				if el != nil {
+					// print("el", el)
+					tt := dataField.String()
+					if tt == "" {
+						el.(*dom.HTMLImageElement).Src = ""
+						el.Class().Add("hidden")
+					} else {
+						el.(*dom.HTMLImageElement).Src = dataField.String()
+						el.Class().Remove("hidden")
+					}
+				} else {
+					print("there be no object of this type")
+				}
 			}
 		}
 	}
@@ -937,7 +949,7 @@ func (f *EditForm) Bind(data interface{}) {
 			name := `[name="` + field.Model + `"]`
 			el := doc.QuerySelector(name)
 			dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
-			print("field =", field)
+			// print("field =", field)
 			switch field.Type {
 			case "photo":
 				if field.PhotoUpload {
