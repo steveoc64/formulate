@@ -50,6 +50,7 @@ type EditField struct {
 	CodeBlock   bool
 	BigText     bool
 	PhotoUpload bool
+	IsUploaded  bool
 	Preview     bool
 	Thumbnail   bool
 }
@@ -371,6 +372,7 @@ func (r *EditRow) AddPhoto(span int, label string, model string) *EditRow {
 		Label:       label,
 		Type:        "photo",
 		PhotoUpload: true,
+		IsUploaded:  false,
 		Focusme:     false,
 		Model:       model,
 		Readonly:    false,
@@ -952,25 +954,15 @@ func (f *EditForm) Bind(data interface{}) {
 			// print("field =", field)
 			switch field.Type {
 			case "photo":
+				print("binding photo field")
 				if field.PhotoUpload {
-
 					img := doc.QuerySelector(`[name="` + field.Model + `-Preview"]`).(*dom.HTMLImageElement)
-					// A Buffer can turn a string or a []byte into an io.Reader.
-					// buf := bytes.NewBufferString(img.Src)
-					// dec := base64.NewDecoder(base64.StdEncoding, buf)
-					// io.Copy(os.Stdout, dec)
-
-					// compress the img Src data
-					// var b bytes.Buffer
-					// gz := gzip.NewWriter(&b)
-					// gz.Write([]byte(img.Src))
-					// gz.Close()
-					// newImg := b.String()
-					// setFromString(dataField, newImg)
-					// print("compress from", len(img.Src), "to", len(newImg))
-					// setFromString(dataField, newImg)
-
-					setFromString(dataField, img.Src)
+					print("img field", img)
+					dasSrc := img.GetAttribute("src")
+					// print("src as a direct attribute", dasSrc)
+					// print("src as an inline attrib", img.Src)
+					// setFromString(dataField, img.Src)
+					setFromString(dataField, dasSrc)
 				}
 			case "text":
 				setFromString(dataField, el.(*dom.HTMLInputElement).Value)
