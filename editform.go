@@ -1027,8 +1027,8 @@ func (f *EditForm) Bind(data interface{}) {
 							dataField := reflect.Indirect(ptrVal).FieldByName(f.Model)
 							switch f.Type {
 							case "text":
-								print("f", f)
-								print("datafield", dataField)
+								// print("f", f)
+								// print("datafield", dataField)
 								setFromString(dataField, el.(*dom.HTMLInputElement).Value)
 							case "textarea":
 								setFromString(dataField, el.(*dom.HTMLTextAreaElement).Value)
