@@ -954,10 +954,10 @@ func (f *EditForm) Bind(data interface{}) {
 			// print("field =", field)
 			switch field.Type {
 			case "photo":
-				print("binding photo field")
+				// print("binding photo field")
 				if field.PhotoUpload {
 					img := doc.QuerySelector(`[name="` + field.Model + `-Preview"]`).(*dom.HTMLImageElement)
-					print("img field", img)
+					// print("img field", img)
 					dasSrc := img.GetAttribute("src")
 					// print("src as a direct attribute", dasSrc)
 					// print("src as an inline attrib", img.Src)
@@ -995,7 +995,7 @@ func (f *EditForm) Bind(data interface{}) {
 				}
 			case "number":
 				ie := el.(*dom.HTMLInputElement)
-				print("number field binding", field)
+				// print("number field binding", field)
 				if field.IsFloat {
 					v, ferr := strconv.ParseFloat(ie.Value, 64)
 					if ferr != nil {
@@ -1012,7 +1012,7 @@ func (f *EditForm) Bind(data interface{}) {
 			case "date":
 				ie := el.(*dom.HTMLInputElement)
 				setFromDate(dataField, ie.Value)
-				print("TODO - bind from date field", ie.Value)
+				// print("TODO - bind from date field", ie.Value)
 			case "div":
 				// is just a placeholder, dont bind it
 			case "swapper":
