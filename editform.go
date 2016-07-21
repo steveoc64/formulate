@@ -79,7 +79,8 @@ type Swapper struct {
 
 func (s *Swapper) AddPanel(panelName string) *Panel {
 	p := Panel{
-		Name: panelName,
+		Name:         panelName,
+		BindWithForm: true,
 	}
 	s.Panels = append(s.Panels, &p)
 	return &p
@@ -124,9 +125,10 @@ func (s *Swapper) SelectByName(name string) {
 }
 
 type Panel struct {
-	Name string
-	Div  *dom.HTMLDivElement
-	Rows []*EditRow
+	Name         string
+	Div          *dom.HTMLDivElement
+	Rows         []*EditRow
+	BindWithForm bool
 }
 
 func (p *Panel) Row(s int) *EditRow {
@@ -1018,70 +1020,73 @@ func (f *EditForm) Bind(data interface{}) {
 			case "swapper":
 				// Swapper has a slice of panels
 				for _, p := range field.Swapper.Panels {
-					// Panel has a slice of rows
-					for _, r := range p.Rows {
-						// Row has a slice of fields
-						for _, f := range r.Fields {
-							name := `[name="` + f.Model + `"]`
-							el := doc.QuerySelector(name)
-							dataField := reflect.Indirect(ptrVal).FieldByName(f.Model)
-							switch f.Type {
-							case "text":
-								// print("f", f)
-								// print("datafield", dataField)
-								setFromString(dataField, el.(*dom.HTMLInputElement).Value)
-							case "textarea":
-								setFromString(dataField, el.(*dom.HTMLTextAreaElement).Value)
-							case "select":
-								idx := el.(*dom.HTMLSelectElement).SelectedIndex
-								setFromInt(dataField, f.Options[idx].Key)
-							case "checkbox":
-								setFromString(dataField, el.(*dom.HTMLInputElement).Value)
-							case "radio":
-								els := doc.QuerySelectorAll(name)
-								for _, rel := range els {
-									print("having a look at rel", rel)
-									ie := rel.(*dom.HTMLInputElement)
-									if ie.Checked {
-										// print("swapper radio", name, "value =", ie.Value)
-										v, _ := strconv.Atoi(ie.Value)
-										setFromInt(dataField, v)
-										break
-									}
-								}
-							case "number":
-								ie := el.(*dom.HTMLInputElement)
-								if field.IsFloat {
-									if ie.Value == "" {
-										setFromFloat(dataField, 0.0)
-									} else {
-										v, ferr := strconv.ParseFloat(ie.Value, 64)
-										if ferr != nil {
-											print("strconv.ParseFloat err ", ferr.Error(), "field=", f, "val=", ie.Value)
+					if p.BindWithForm {
+
+						// Panel has a slice of rows
+						for _, r := range p.Rows {
+							// Row has a slice of fields
+							for _, f := range r.Fields {
+								name := `[name="` + f.Model + `"]`
+								el := doc.QuerySelector(name)
+								dataField := reflect.Indirect(ptrVal).FieldByName(f.Model)
+								switch f.Type {
+								case "text":
+									// print("f", f)
+									// print("datafield", dataField)
+									setFromString(dataField, el.(*dom.HTMLInputElement).Value)
+								case "textarea":
+									setFromString(dataField, el.(*dom.HTMLTextAreaElement).Value)
+								case "select":
+									idx := el.(*dom.HTMLSelectElement).SelectedIndex
+									setFromInt(dataField, f.Options[idx].Key)
+								case "checkbox":
+									setFromString(dataField, el.(*dom.HTMLInputElement).Value)
+								case "radio":
+									els := doc.QuerySelectorAll(name)
+									for _, rel := range els {
+										print("having a look at rel", rel)
+										ie := rel.(*dom.HTMLInputElement)
+										if ie.Checked {
+											// print("swapper radio", name, "value =", ie.Value)
+											v, _ := strconv.Atoi(ie.Value)
+											setFromInt(dataField, v)
+											break
 										}
-										setFromFloat(dataField, v)
 									}
-								} else {
-									if ie.Value == "" {
-										setFromInt(dataField, 0)
-									} else {
-										v, ferr := strconv.Atoi(ie.Value)
-										if ferr != nil {
-											print("strconv.Atoi err ", ferr.Error(), "val =", ie.Value, "model =", f.Model, "field =", f)
+								case "number":
+									ie := el.(*dom.HTMLInputElement)
+									if field.IsFloat {
+										if ie.Value == "" {
+											setFromFloat(dataField, 0.0)
+										} else {
+											v, ferr := strconv.ParseFloat(ie.Value, 64)
+											if ferr != nil {
+												print("strconv.ParseFloat err ", ferr.Error(), "field=", f, "val=", ie.Value)
+											}
+											setFromFloat(dataField, v)
 										}
-										setFromInt(dataField, v)
+									} else {
+										if ie.Value == "" {
+											setFromInt(dataField, 0)
+										} else {
+											v, ferr := strconv.Atoi(ie.Value)
+											if ferr != nil {
+												print("strconv.Atoi err ", ferr.Error(), "val =", ie.Value, "model =", f.Model, "field =", f)
+											}
+											setFromInt(dataField, v)
+										}
 									}
+								case "date":
+									ie := el.(*dom.HTMLInputElement)
+									setFromDate(dataField, ie.Value)
+									// print("TODO - bind swapper from date field", ie.Value)
 								}
-							case "date":
-								ie := el.(*dom.HTMLInputElement)
-								setFromDate(dataField, ie.Value)
-								// print("TODO - bind swapper from date field", ie.Value)
+
 							}
+						} // for rows of panel
+					} // if panel is allowed to bind
 
-						}
-					}
-
-				}
+				} // foreach panel in the swapper
 
 			default:
 				print("TODO - bind from ", field.Type)
