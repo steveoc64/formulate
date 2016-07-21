@@ -1027,6 +1027,8 @@ func (f *EditForm) Bind(data interface{}) {
 							dataField := reflect.Indirect(ptrVal).FieldByName(f.Model)
 							switch f.Type {
 							case "text":
+								print("f", f)
+								print("datafield", dataField)
 								setFromString(dataField, el.(*dom.HTMLInputElement).Value)
 							case "textarea":
 								setFromString(dataField, el.(*dom.HTMLTextAreaElement).Value)
@@ -1251,7 +1253,7 @@ func setFromString(target reflect.Value, str string) {
 		target.SetString(str)
 	default:
 		print("conversion of string to unknown type", k.String())
-		target.SetString(str)
+		// target.SetString(str)
 	}
 }
 
@@ -1303,7 +1305,7 @@ func setFromInt(target reflect.Value, v int) {
 		target.SetString(fmt.Sprintf("%d", v))
 	default:
 		print("conversion of int to unknown type", k.String())
-		target.SetInt(int64(v))
+		// target.SetInt(int64(v))
 	}
 }
 
@@ -1328,6 +1330,6 @@ func setFromFloat(target reflect.Value, v float64) {
 		target.SetString(fmt.Sprintf("%f", v))
 	default:
 		print("conversion of float to unknown type", k.String())
-		target.SetFloat(v)
+		// target.SetFloat(v)
 	}
 }
