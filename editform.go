@@ -719,7 +719,29 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 								field.Value = fmt.Sprintf("%d", dataField.Int())
 							case reflect.Ptr:
 								// print(field.Model + " of type " + dataField.Kind().String())
-								field.Value = dataField.String()
+								switch field.Type {
+								case "date":
+									field.Value = ""
+									ptr := unsafe.Pointer(dataField.Pointer())
+									if ptr != nil {
+										t := *(*time.Time)(ptr)
+										field.Value = t.Format(rfc3339DateLayout)
+									}
+								case "number":
+									field.Value = ""
+									ptr := unsafe.Pointer(dataField.Pointer())
+									if ptr != nil {
+										if field.IsFloat {
+											v := *(*float64)(ptr)
+											field.Value = fmt.Sprintf("%f", v)
+										} else {
+											v := *(*int)(ptr)
+											field.Value = fmt.Sprintf("%d", v)
+										}
+									}
+								default:
+									field.Value = dataField.String()
+								}
 							case reflect.String:
 								field.Value = dataField.String()
 							case reflect.Bool:
