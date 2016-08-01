@@ -791,7 +791,7 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 			if field.Model != "" && field.Type == "photo" {
 				// print("post render", field)
 				dataField := reflect.Indirect(reflect.ValueOf(data)).FieldByName(field.Model)
-				el := doc.QuerySelector("[name=" + field.Model + "-Preview]")
+				el := doc.QuerySelector("[name=" + field.Model + "Preview]")
 				if el != nil {
 					// print("el", el)
 					tt := dataField.String()
@@ -958,7 +958,7 @@ func (f *EditForm) Bind(data interface{}) {
 			case "photo":
 				// print("binding photo field")
 				if field.PhotoUpload {
-					img := doc.QuerySelector(`[name="` + field.Model + `-Preview"]`).(*dom.HTMLImageElement)
+					img := doc.QuerySelector(`[name="` + field.Model + `Preview"]`).(*dom.HTMLImageElement)
 					// print("img field", img)
 					dasSrc := img.GetAttribute("src")
 					// print("src as a direct attribute", dasSrc)
