@@ -9,13 +9,15 @@ import (
 )
 
 type ListCol struct {
-	Heading  string
-	Model    string
-	Format   string
-	Width    string
-	IsImg    bool
-	IsBool   bool
-	MaxChars int
+	Heading   string
+	Model     string
+	Format    string
+	Width     string
+	IsImg     bool
+	IsArray   bool
+	Fieldname string
+	IsBool    bool
+	MaxChars  int
 }
 
 type ListForm struct {
@@ -119,6 +121,20 @@ func (f *ListForm) ImgColumn(heading string, model string) *ListForm {
 		Heading: heading,
 		Model:   model,
 		IsImg:   true,
+	}
+	f.Cols = append(f.Cols, c)
+	f.HasImages = true
+	return f
+}
+
+// Add a colunm to the listform in Img Format
+func (f *ListForm) MultiImgColumn(heading string, model string, field string) *ListForm {
+	c := &ListCol{
+		Heading:   heading,
+		Model:     model,
+		IsImg:     true,
+		IsArray:   true,
+		Fieldname: field,
 	}
 	f.Cols = append(f.Cols, c)
 	f.HasImages = true
@@ -298,8 +314,17 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 			}
 
 			if col.IsImg {
-				src += fmt.Sprintf("<td %s %s>{{if .%s}}<img name=%s-{{.ID}} src={{.%s | safeURL}}>{{end}}</td>\n",
-					width, col.Format, col.Model, col.Model, col.Model)
+				if col.IsArray {
+					src += fmt.Sprintf("<td %s %s>{{range $k,$v := .%s}}", width, col.Format, col.Model)
+
+					src += fmt.Sprintf("{{if $v.%s}}<img name=%s-{{$k}}-{{.ID}} src={{$v.%s | safeURL}}>{{end}}",
+						col.Fieldname, col.Model, col.Fieldname)
+
+					src += "{{end}}</td>\n"
+				} else {
+					src += fmt.Sprintf("<td %s %s>{{if .%s}}<img name=%s-{{.ID}} src={{.%s | safeURL}}>{{end}}</td>\n",
+						width, col.Format, col.Model, col.Model, col.Model)
+				}
 			} else if col.IsBool {
 				src += fmt.Sprintf("<td %s %s>{{if .%s}}<i class=\"fa fa-check fa-lg\">{{end}}</td>\n",
 					width, col.Format, col.Model)

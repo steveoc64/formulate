@@ -18,8 +18,6 @@ func Templates(g func(string) (*temple.Template, error)) {
 	generatedTemplates.AddFunc("safeURL", func(u string) template.URL {
 		return template.URL(u)
 	})
-
-	// print("setup templates", generatedTemplates)
 }
 
 // Load a template and attach it to the specified element in the doc
