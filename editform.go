@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 	"unsafe"
 
@@ -53,6 +54,13 @@ type EditField struct {
 	IsUploaded  bool
 	Preview     bool
 	Thumbnail   bool
+}
+
+type FileField struct {
+	Data     string
+	Filename string
+	Type     string
+	Size     int
 }
 
 type EditRow struct {
@@ -367,7 +375,7 @@ func (r *EditRow) AddInput(span int, label string, model string) *EditRow {
 	return r
 }
 
-// Add a Photo field
+// Add a Photo field. The Model must be of type FileField
 func (r *EditRow) AddPhoto(span int, label string, model string) *EditRow {
 	f := &EditField{
 		Span:        span,
@@ -383,7 +391,7 @@ func (r *EditRow) AddPhoto(span int, label string, model string) *EditRow {
 	return r
 }
 
-// Add a Photo  preview field
+// Add a Photo  preview field. The Model must be of type FileField
 func (r *EditRow) AddPreview(span int, label string, model string) *EditRow {
 	f := &EditField{
 		Span:     span,
@@ -398,7 +406,7 @@ func (r *EditRow) AddPreview(span int, label string, model string) *EditRow {
 	return r
 }
 
-// Add a Photo  thumbnail field
+// Add a Photo  thumbnail field. The Model must be of type FileField
 func (r *EditRow) AddThumbnail(span int, label string, model string) *EditRow {
 	f := &EditField{
 		Span:      span,
@@ -812,18 +820,29 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 		for _, field := range row.Fields {
 			if field.Model != "" && field.Type == "photo" {
 				// print("post render", field)
-				dataField := reflect.Indirect(reflect.ValueOf(data)).FieldByName(field.Model)
+				dataField := reflect.Indirect(reflect.ValueOf(data)).FieldByName(fmt.Sprintf("%s", field.Model))
+				// fmt.Printf("in render, the dataField = %T\n", dataField)
+
+				// dataField must be of type FileField
 				el := doc.QuerySelector("[name=" + field.Model + "Preview]")
 				if el != nil {
+					// fn := doc.QuerySelector("[name=" + field.Model + "Filename]").(*dom.HTMLInputElement)
+
 					// print("el", el)
 					tt := dataField.String()
 					if tt == "" {
 						el.(*dom.HTMLImageElement).Src = ""
 						el.Class().Add("hidden")
+						// fn.Class().Add("hidden")
 					} else {
 						el.(*dom.HTMLImageElement).Src = dataField.String()
 						el.Class().Remove("hidden")
+
+						// fn.Value = fileName.String()
+						// print("filename on file is", fileName.String())
+						// fn.Class().Remove("hidden")
 					}
+
 				} else {
 					print("there be no object of this type")
 				}
@@ -975,18 +994,42 @@ func (f *EditForm) Bind(data interface{}) {
 			name := `[name="` + field.Model + `"]`
 			el := doc.QuerySelector(name)
 			dataField := reflect.Indirect(ptrVal).FieldByName(field.Model)
+
 			// print("field =", field)
 			switch field.Type {
 			case "photo":
-				// print("binding photo field")
+				print("binding photo field")
+				print("and dataField must be a struct FileField at this stage")
+				k := dataField.Kind()
+
+				print("dataField kind is", k, k.String())
+
 				if field.PhotoUpload {
+
 					img := doc.QuerySelector(`[name="` + field.Model + `Preview"]`).(*dom.HTMLImageElement)
 					// print("img field", img)
 					dasSrc := img.GetAttribute("src")
-					// print("src as a direct attribute", dasSrc)
-					// print("src as an inline attrib", img.Src)
-					// setFromString(dataField, img.Src)
-					setFromString(dataField, dasSrc)
+
+					photoDataField := dataField.FieldByName("Data")
+					// photoDataField := reflect.Indirect(reflect.ValueOf(dataField)).FieldByName("Data")
+					print("set datafld from dasSrc")
+					setFromString(photoDataField, dasSrc)
+
+					// get the filename from the inputfield
+					inputField := doc.QuerySelector(fmt.Sprintf("[name=%s]", field.Model)).(*dom.HTMLInputElement)
+					// print("filename may =", inputField.Value)
+					lastSlash := strings.LastIndex(inputField.Value, `\`)
+					// print("last slash", lastSlash)
+					fileName := inputField.Value
+					if lastSlash > -1 {
+						fileName = fileName[lastSlash+1:]
+					}
+					print("editform bind computed filename to be", fileName)
+
+					fileNameField := dataField.FieldByName("Filename")
+					// print("fnf", fileNameField)
+
+					setFromString(fileNameField, fileName)
 				}
 			case "text":
 				setFromString(dataField, el.(*dom.HTMLInputElement).Value)
