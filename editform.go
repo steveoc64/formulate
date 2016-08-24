@@ -819,17 +819,17 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 	for _, row := range f.Rows {
 		for _, field := range row.Fields {
 			if field.Model != "" && field.Type == "photo" {
-				// print("post render", field)
+				print("post render", field)
 				dataField := reflect.Indirect(reflect.ValueOf(data)).FieldByName(fmt.Sprintf("%s", field.Model))
-				// fmt.Printf("in render, the dataField = %T\n", dataField)
+				fmt.Printf("in render, the dataField = %T\n", dataField)
 
 				// dataField must be of type FileField
 				el := doc.QuerySelector("[name=" + field.Model + "Preview]")
 				if el != nil {
-					// fn := doc.QuerySelector("[name=" + field.Model + "Filename]").(*dom.HTMLInputElement)
 
 					// print("el", el)
-					tt := dataField.String()
+					tt := dataField.FieldByName("Data").String()
+					print("here with tt", tt[:22])
 					if tt == "" {
 						el.(*dom.HTMLImageElement).Src = ""
 						el.Class().Add("hidden")

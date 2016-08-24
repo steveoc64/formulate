@@ -314,15 +314,15 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 			}
 
 			if col.IsImg {
-				if col.IsArray {
+				if col.IsArray { // MultiImgColunn
 					src += fmt.Sprintf("<td %s %s>{{range $k,$v := .%s}}", width, col.Format, col.Model)
 
 					src += fmt.Sprintf("{{if $v.%s}}<img name=%s-{{$k}}-{{.ID}} src={{$v.%s | safeURL}}>{{end}}",
 						col.Fieldname, col.Model, col.Fieldname)
 
 					src += "{{end}}</td>\n"
-				} else {
-					src += fmt.Sprintf("<td %s>{{if .%s}}<img name=%s-{{.ID}} src={{.%s | safeURL}}>{{end}}</td>\n",
+				} else { // ImgColumn
+					src += fmt.Sprintf("<td %s>{{if .%s.Data}}<img name=%s-{{.ID}} src={{.%s.Data | safeURL}}>{{end}}</td>\n",
 						width, col.Model, col.Model, col.Model)
 				}
 			} else if col.IsBool {
