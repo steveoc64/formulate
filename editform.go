@@ -406,6 +406,21 @@ func (r *EditRow) AddPreview(span int, label string, model string) *EditRow {
 	return r
 }
 
+// Add a Photo preview field, where the model is of type raw data
+func (r *EditRow) AddRawPreview(span int, label string, model string) *EditRow {
+	f := &EditField{
+		Span:     span,
+		Label:    label,
+		Type:     "photo",
+		Preview:  true,
+		Focusme:  false,
+		Model:    model,
+		Readonly: false,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
 // Add a Photo  thumbnail field. The Model must be of type FileField
 func (r *EditRow) AddThumbnail(span int, label string, model string) *EditRow {
 	f := &EditField{
@@ -819,32 +834,34 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 	for _, row := range f.Rows {
 		for _, field := range row.Fields {
 			if field.Model != "" && field.Type == "photo" {
-				print("post render", field)
 				dataField := reflect.Indirect(reflect.ValueOf(data)).FieldByName(fmt.Sprintf("%s", field.Model))
-				fmt.Printf("in render, the dataField = %T\n", dataField)
+				print("post processing photo field", field.Model, "of type", dataField.Kind().String())
 
-				// dataField must be of type FileField
 				el := doc.QuerySelector("[name=" + field.Model + "Preview]")
 				if el != nil {
 
-					// print("el", el)
-					tt := dataField.FieldByName("Data").String()
-					print("here with tt", tt[:22])
+					tt := ""
+					switch dataField.Kind() {
+					case reflect.String:
+						tt = dataField.String()
+					case reflect.Struct:
+						// dataField is a struct that must contain a field called 'Data' which contains the image to render
+						tt = dataField.FieldByName("Data").String()
+					default:
+						print("ERROR: Dont know how to process an image of type", dataField.Kind().String())
+
+					} // switch statement end
 					if tt == "" {
 						el.(*dom.HTMLImageElement).Src = ""
 						el.Class().Add("hidden")
 						// fn.Class().Add("hidden")
 					} else {
-						el.(*dom.HTMLImageElement).Src = dataField.String()
+						el.(*dom.HTMLImageElement).Src = tt
 						el.Class().Remove("hidden")
-
-						// fn.Value = fileName.String()
-						// print("filename on file is", fileName.String())
-						// fn.Class().Remove("hidden")
 					}
 
 				} else {
-					print("there be no object of this type")
+					print("There is no DOM element called '", field.Model+"Preview' to write the image into")
 				}
 			}
 		}

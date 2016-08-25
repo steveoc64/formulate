@@ -322,7 +322,7 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 
 					src += "{{end}}</td>\n"
 				} else { // ImgColumn
-					src += fmt.Sprintf("<td %s>{{if .%s.Data}}<img name=%s-{{.ID}} src={{.%s.Data | safeURL}}>{{end}}</td>\n",
+					src += fmt.Sprintf("<td %s>{{if .%s}}<img name=%s-{{.ID}} src={{.%s | safeURL}}>{{end}}</td>\n",
 						width, col.Model, col.Model, col.Model)
 				}
 			} else if col.IsBool {
