@@ -835,7 +835,7 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 		for _, field := range row.Fields {
 			if field.Model != "" && field.Type == "photo" {
 				dataField := reflect.Indirect(reflect.ValueOf(data)).FieldByName(fmt.Sprintf("%s", field.Model))
-				print("post processing photo field", field.Model, "of type", dataField.Kind().String())
+				// print("post processing photo field", field.Model, "of type", dataField.Kind().String())
 
 				el := doc.QuerySelector("[name=" + field.Model + "Preview]")
 				if el != nil {
@@ -1015,11 +1015,11 @@ func (f *EditForm) Bind(data interface{}) {
 			// print("field =", field)
 			switch field.Type {
 			case "photo":
-				print("binding photo field")
-				print("and dataField must be a struct FileField at this stage")
-				k := dataField.Kind()
+				// print("binding photo field")
+				// print("and dataField must be a struct FileField at this stage")
+				// k := dataField.Kind()
 
-				print("dataField kind is", k, k.String())
+				// print("dataField kind is", k, k.String())
 
 				if field.PhotoUpload {
 
@@ -1029,7 +1029,7 @@ func (f *EditForm) Bind(data interface{}) {
 
 					photoDataField := dataField.FieldByName("Data")
 					// photoDataField := reflect.Indirect(reflect.ValueOf(dataField)).FieldByName("Data")
-					print("set datafld from dasSrc")
+					// print("set datafld from dasSrc")
 					setFromString(photoDataField, dasSrc)
 
 					// get the filename from the inputfield
@@ -1041,7 +1041,7 @@ func (f *EditForm) Bind(data interface{}) {
 					if lastSlash > -1 {
 						fileName = fileName[lastSlash+1:]
 					}
-					print("editform bind computed filename to be", fileName)
+					// print("editform bind computed filename to be", fileName)
 
 					fileNameField := dataField.FieldByName("Filename")
 					// print("fnf", fileNameField)
