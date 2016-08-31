@@ -223,6 +223,11 @@ func (f *ListForm) decorate(selector string) {
 				evt.PreventDefault()
 				td := evt.Target()
 				tr := td.ParentElement()
+				// Fix the issue where the user clicked on some clickable element inside the row
+				// which adds an extra level which we dont usually need
+				if tr.TagName() == "TD" {
+					tr = tr.ParentElement()
+				}
 				key := tr.GetAttribute("key")
 				f.RowCB(key)
 			})

@@ -847,6 +847,8 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 					case reflect.Struct:
 						// dataField is a struct that must contain a field called 'Data' which contains the image to render
 						tt = dataField.FieldByName("Data").String()
+					case reflect.Invalid:
+						tt = ""
 					default:
 						print("ERROR: Dont know how to process an image of type", dataField.Kind().String())
 
@@ -1017,14 +1019,14 @@ func (f *EditForm) Bind(data interface{}) {
 			case "photo":
 				// print("binding photo field")
 				// print("and dataField must be a struct FileField at this stage")
-				// k := dataField.Kind()
+				k := dataField.Kind()
 
-				// print("dataField kind is", k, k.String())
+				print("model is", field.Model, "dataField kind is", k, k.String())
 
 				if field.PhotoUpload {
 
 					img := doc.QuerySelector(`[name="` + field.Model + `Preview"]`).(*dom.HTMLImageElement)
-					// print("img field", img)
+					print("img field", img)
 					dasSrc := img.GetAttribute("src")
 
 					photoDataField := dataField.FieldByName("Data")
