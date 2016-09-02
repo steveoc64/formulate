@@ -853,13 +853,31 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 						print("ERROR: Dont know how to process an image of type", dataField.Kind().String())
 
 					} // switch statement end
+
+					// Get the hint field
+					print("looking for [name=" + field.Model + "PreviewHint]")
+					elh := doc.QuerySelector("[name=" + field.Model + "PreviewHint]")
+					print("elh = ", elh)
+					print("elh content = ", elh.InnerHTML())
+					print("elh class =", elh.Class().String())
 					if tt == "" {
 						el.(*dom.HTMLImageElement).Src = ""
 						el.Class().Add("hidden")
-						// fn.Class().Add("hidden")
+						elh.Class().Add("hidden")
+						// }
 					} else {
-						el.(*dom.HTMLImageElement).Src = tt
 						el.Class().Remove("hidden")
+						elh.Class().Remove("hidden")
+						print("removed hidden, so its now elh class =", elh.Class().String())
+						el.(*dom.HTMLImageElement).Src = tt
+					}
+
+					// Now ... if this form has a save function, then allow a confirmation click on the preview image
+					// to automatically call the save function
+
+					if f.SaveCB != nil {
+						print("adding a click handler to the preview to call the save event")
+						el.AddEventListener("click", false, f.SaveCB)
 					}
 
 				} else {
