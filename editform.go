@@ -855,20 +855,19 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 					} // switch statement end
 
 					// Get the hint field
-					print("looking for [name=" + field.Model + "PreviewHint]")
 					elh := doc.QuerySelector("[name=" + field.Model + "PreviewHint]")
-					print("elh = ", elh)
-					print("elh content = ", elh.InnerHTML())
-					print("elh class =", elh.Class().String())
 					if tt == "" {
 						el.(*dom.HTMLImageElement).Src = ""
 						el.Class().Add("hidden")
-						elh.Class().Add("hidden")
+						if elh != nil {
+							elh.Class().Add("hidden")
+						}
 						// }
 					} else {
 						el.Class().Remove("hidden")
-						elh.Class().Remove("hidden")
-						print("removed hidden, so its now elh class =", elh.Class().String())
+						if elh != nil {
+							elh.Class().Remove("hidden")
+						}
 						el.(*dom.HTMLImageElement).Src = tt
 					}
 
