@@ -881,7 +881,7 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 					// Now ... if this form has a save function, then allow a confirmation click on the preview image
 					// to automatically call the save function
 
-					if f.SaveCB != nil {
+					if f.SaveCB != nil && field.PhotoUpload {
 						print("adding a click handler to the preview to call the save event")
 						el.AddEventListener("click", false, f.SaveCB)
 					}
