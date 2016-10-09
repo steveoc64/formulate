@@ -349,8 +349,9 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 {{end}}  
   <tbody>
   </tbody>
-</table>`
-
+</table>
+<div id="action-grid" class="no-print hidden"></div>
+`
 		if doTitle {
 			src += `
 </div>
@@ -370,4 +371,30 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 	}
 	return tmpl
 
+}
+
+// Add actions
+func (f *ListForm) ActionGrid(template string, selector string, id interface{}, cb func(string)) {
+
+	// print("add action grid")
+	w := dom.GetWindow()
+	doc := w.Document()
+
+	el := doc.QuerySelector(selector)
+	if el == nil {
+		print("Could not find selector", selector)
+		return
+	}
+	el.Class().Remove("hidden")
+
+	renderTemplate(template, selector, id)
+	for _, ai := range doc.QuerySelectorAll(".action__item") {
+		url := ai.(*dom.HTMLDivElement).GetAttribute("url")
+		if url != "" {
+			ai.AddEventListener("click", false, func(evt dom.Event) {
+				url := evt.CurrentTarget().GetAttribute("url")
+				cb(url)
+			})
+		}
+	}
 }

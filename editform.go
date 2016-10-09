@@ -546,6 +546,22 @@ func (r *EditRow) AddCheck(span int, label string, model string) *EditRow {
 	return r
 }
 
+// Add a Checkbok input
+func (r *EditRow) AddDisplayCheck(span int, label string, model string) *EditRow {
+
+	fld := &EditField{
+		Span:     span,
+		Label:    label,
+		Type:     "checkbox",
+		Focusme:  false,
+		Model:    model,
+		Readonly: true,
+	}
+
+	r.Fields = append(r.Fields, fld)
+	return r
+}
+
 // Add a panel swapper
 func (r *EditRow) AddSwapper(span int, label string, swapper *Swapper) *EditRow {
 
@@ -910,6 +926,7 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 
 	// If there is a focusfield, then focus on it
 	if el := doc.QuerySelector("#focusme"); el != nil {
+		print("setting focus on", el)
 		el.(*dom.HTMLInputElement).Focus()
 	}
 
@@ -926,9 +943,14 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 
 		if el := doc.QuerySelector(".grid-form"); el != nil {
 			el.AddEventListener("keyup", false, func(evt dom.Event) {
-				if evt.(*dom.KeyboardEvent).KeyCode == 27 {
-					evt.PreventDefault()
-					el.AddEventListener("click", false, f.CancelCB)
+				kevt, isKB := evt.(*dom.KeyboardEvent)
+				if isKB && kevt != nil {
+					if kevt.KeyCode == 27 {
+						evt.PreventDefault()
+						if f.CancelCB != nil {
+							f.CancelCB(evt)
+						}
+					}
 				}
 			})
 		}
