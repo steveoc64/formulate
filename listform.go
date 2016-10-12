@@ -361,7 +361,7 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 `
 		}
 
-		print("list source = ", src)
+		// print("list source = ", src)
 		createErr := generatedTemplates.AddTemplate(name, src)
 		if createErr != nil {
 			print("failed to create template", name, createErr.Error())
