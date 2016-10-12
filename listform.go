@@ -333,6 +333,9 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 			} else if col.IsBool {
 				src += fmt.Sprintf("<td %s %s>{{if .%s}}<i class=\"fa fa-check fa-lg\">{{end}}</td>\n",
 					width, col.Format, col.Model)
+			} else if col.Format == "date" {
+				src += fmt.Sprintf("<td %s>{{if .%s}}{{.%s.Format \"Mon, Jan 2 2006\"}}{{end}}</td>\n",
+					width, col.Model, col.Model)
 			} else {
 				if col.Format != "" {
 					src += fmt.Sprintf("<td class=\"{{.%s}}\">{{if .%s}}{{.%s}}{{end}}</td>\n",
@@ -358,7 +361,7 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 `
 		}
 
-		// print("list source = ", src)
+		print("list source = ", src)
 		createErr := generatedTemplates.AddTemplate(name, src)
 		if createErr != nil {
 			print("failed to create template", name, createErr.Error())
