@@ -35,6 +35,7 @@ type ListForm struct {
 	Draggable   bool
 	HasImages   bool
 	MaxChars    int
+	AddPadding  bool
 }
 
 // Init a new listform
@@ -43,6 +44,7 @@ func (f *ListForm) New(icon string, title string) *ListForm {
 	f.Icon = icon
 	f.PrintCB = nil
 	f.MaxChars = 120
+	f.AddPadding = true
 	// f.KeyField = "ID"
 	return f
 }
@@ -154,6 +156,13 @@ func (f *ListForm) BoolColumn(heading string, model string) *ListForm {
 }
 
 // Render the form using a template that we generate on the fly
+func (f *ListForm) RenderAgain(name string, selector string, data interface{}) {
+	pad := f.AddPadding
+	f.AddPadding = false
+	f.Render(name, selector, data)
+	f.AddPadding = pad
+}
+
 func (f *ListForm) Render(name string, selector string, data interface{}) {
 
 	f.Data = data
@@ -260,7 +269,12 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 
 		if doTitle {
 
+			if f.AddPadding {
+				src += `<div class="header-pad"></div>`
+			}
+
 			src += `
+		}
 <div class="data-container">
 	<div class="row data-table-header">
     <h3 class="column column-90" id="legend">
