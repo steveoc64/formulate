@@ -91,8 +91,16 @@ func (s *Swapper) AddPanel(panelName string) *Panel {
 		Name:         panelName,
 		BindWithForm: true,
 	}
+	print("adding panel", panelName)
 	s.Panels = append(s.Panels, &p)
 	return &p
+}
+
+func (s *Swapper) Current() *Panel {
+	print("getting panel at", s.Selected)
+	p := s.Panels[s.Selected]
+	print("found ", p)
+	return p
 }
 
 func (s *Swapper) Select(idx int) {
@@ -1296,11 +1304,15 @@ func (f *Panel) Bind(data interface{}) {
 				setFromString(dataField, el.(*dom.HTMLTextAreaElement).Value)
 			case "select":
 				idx := el.(*dom.HTMLSelectElement).SelectedIndex
-				// print("here with field", field)
-				// print("datafield", dataField)
-				// print("idx", idx)
-				// print("opts key", field.Options[idx])
-				setFromInt(dataField, field.Options[idx].Key)
+				if idx < 0 {
+					setFromInt(dataField, 0)
+				} else {
+					// print("here with field", field)
+					// print("datafield", dataField)
+					// print("idx", idx)
+					// print("opts key", field.Options[idx])
+					setFromInt(dataField, field.Options[idx].Key)
+				}
 			case "groupselect":
 				idx := el.(*dom.HTMLSelectElement).SelectedIndex
 				setFromInt(dataField, idx)
