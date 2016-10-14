@@ -91,15 +91,15 @@ func (s *Swapper) AddPanel(panelName string) *Panel {
 		Name:         panelName,
 		BindWithForm: true,
 	}
-	print("adding panel", panelName)
+	// print("adding panel", panelName)
 	s.Panels = append(s.Panels, &p)
 	return &p
 }
 
 func (s *Swapper) Current() *Panel {
-	print("getting panel at", s.Selected)
+	// print("getting panel at", s.Selected)
 	p := s.Panels[s.Selected]
-	print("found ", p)
+	// print("found ", p)
 	return p
 }
 
