@@ -1444,10 +1444,10 @@ func setFromString(target reflect.Value, str string) {
 		target.SetFloat(i)
 	case reflect.Ptr:
 		print("conversion of string to ptr")
-		target.SetString(str)
+		target.SetString(strings.TrimSpace(str))
 	case reflect.String:
 		// print("conversion of string to string")
-		target.SetString(str)
+		target.SetString(strings.TrimSpace(str))
 	default:
 		print("conversion of string to unknown type", k.String())
 		// target.SetString(str)
