@@ -77,6 +77,7 @@ type EditForm struct {
 	DeleteCB func(dom.Event)
 	SaveCB   func(dom.Event)
 	PrintCB  func(dom.Event)
+	ChangeCB func(dom.Event)
 	AttachCB func()
 }
 
@@ -345,6 +346,12 @@ func (f *EditForm) AttachEvent(c func()) *EditForm {
 // Associate a print event with the editform
 func (f *EditForm) PrintEvent(c func(dom.Event)) *EditForm {
 	f.PrintCB = c
+	return f
+}
+
+// Associate a change event with the editform .. for autosaves
+func (f *EditForm) ChangeEvent(c func(dom.Event)) *EditForm {
+	f.ChangeCB = c
 	return f
 }
 
@@ -1005,6 +1012,13 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 		}
 	}
 
+	// plug in the change event
+	if f.ChangeCB != nil {
+		if el := doc.QuerySelector("form"); el != nil {
+			el.AddEventListener("change", false, f.ChangeCB)
+		}
+	}
+
 	// plug in the print callback
 	if f.PrintCB != nil {
 		if el := doc.QuerySelector(".data-print-btn"); el != nil {
@@ -1144,8 +1158,12 @@ func (f *EditForm) BindPart(data interface{}, all bool) {
 				for _, rel := range els {
 					ie := rel.(*dom.HTMLInputElement)
 					if ie.Checked {
-						v, _ := strconv.Atoi(ie.Value)
-						setFromInt(dataField, v)
+						v, err := strconv.Atoi(ie.Value)
+						if err != nil {
+							print("strconv err from ", ie.Value, err.Error())
+						} else {
+							setFromInt(dataField, v)
+						}
 						break
 					}
 				}
