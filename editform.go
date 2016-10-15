@@ -189,12 +189,15 @@ func (p *Panel) Paint(data interface{}) {
 				for _, f := range r.Fields {
 					// print("render swapper field", f.Model)
 					dataField := reflect.Indirect(ptrVal).FieldByName(f.Model)
+					boolValue := false
 					// print("Field Type", f.Type)
 					switch dataField.Kind() {
 					case reflect.Float64:
 						f.Value = fmt.Sprintf("%.2f", dataField.Float())
 					case reflect.Int:
 						f.Value = fmt.Sprintf("%d", dataField.Int())
+					case reflect.Bool:
+						boolValue = dataField.Bool()
 					case reflect.Ptr:
 						// print("odd case of a swapper field being a ptr", f.Model, f.Type)
 						switch f.Type {
@@ -236,6 +239,9 @@ func (p *Panel) Paint(data interface{}) {
 					case "select":
 						el := doc.QuerySelector(fmt.Sprintf("[name=%s-%s]", p.Name, f.Model)).(*dom.HTMLSelectElement)
 						el.Value = f.Value
+					case "checkbox":
+						el := doc.QuerySelector(fmt.Sprintf("[name=%s-%s]", p.Name, f.Model)).(*dom.HTMLInputElement)
+						el.Checked = boolValue
 					}
 				}
 			}
