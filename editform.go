@@ -1636,3 +1636,15 @@ func AppendDiv(name string) *dom.HTMLDivElement {
 	doc.QuerySelector("main").AppendChild(div)
 	return div
 }
+
+func MainContainer(newClass string) *dom.HTMLDivElement {
+	w := dom.GetWindow()
+	doc := w.Document()
+	main := doc.QuerySelector("main")
+	main.SetInnerHTML("")
+	div := doc.CreateElement("div").(*dom.HTMLDivElement)
+	div.SetID("main-container")
+	div.Class().SetString(newClass)
+	main.AppendChild(div)
+	return div
+}
