@@ -1557,6 +1557,20 @@ func (f *EditForm) Class(model string) *dom.TokenList {
 	}
 }
 
+func (f *EditForm) Hide(model string) {
+	cl := f.Class(model)
+	if cl != nil {
+		cl.Add("hidden")
+	}
+}
+
+func (f *EditForm) Show(model string) {
+	cl := f.Class(model)
+	if cl != nil {
+		cl.Remove("hidden")
+	}
+}
+
 func (f *EditForm) GetRow(r int) *dom.HTMLDivElement {
 	el := f.Get(fmt.Sprintf("row-%d", r)).(*dom.HTMLDivElement)
 	return el
