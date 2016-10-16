@@ -1531,18 +1531,20 @@ func setFromFloat(target reflect.Value, v float64) {
 	}
 }
 
-func (f *EditForm) Get(model string) *dom.Element {
+func (f *EditForm) Get(model string) dom.Element {
 	w := dom.GetWindow()
 	doc := w.Document()
 	el := doc.QuerySelector(fmt.Sprintf("[name=%s]", model))
+	if el == nil {
+		print("Error: Cant find field", model)
+	}
+	return el
 }
 
 func (f *EditForm) ReadOnly(model string, r bool) {
 	el := f.Get(model)
 	if el != nil {
 		el.(*dom.HTMLInputElement).ReadOnly = r
-	} else {
-		print("Error: Cannot find field ", model)
 	}
 }
 
@@ -1551,7 +1553,32 @@ func (f *EditForm) Class(model string) *dom.TokenList {
 	if el != nil {
 		return el.Class()
 	} else {
-		print("Error: Cannot find field ", model)
 		return nil
 	}
+}
+
+func (f *EditForm) GetRow(r int) *dom.HTMLDivElement {
+	el := f.Get(fmt.Sprintf("row-%d", r)).(*dom.HTMLDivElement)
+	return el
+}
+
+func (f *EditForm) GetCell(r int, col int) *dom.HTMLDivElement {
+	el := f.Get(fmt.Sprintf("row-%d-%d", r, col)).(*dom.HTMLDivElement)
+	return el
+}
+
+func (f *EditForm) Focus(model string) {
+	el := f.Get(model)
+	if el != nil {
+		el.(*dom.HTMLInputElement).Focus()
+	}
+}
+
+func AppendDiv(name string) *dom.HTMLDivElement {
+	w := dom.GetWindow()
+	doc := w.Document()
+	div := doc.CreateElement("div").(*dom.HTMLDivElement)
+	div.SetID(name)
+	doc.QuerySelector("main").AppendChild(div)
+	return div
 }
