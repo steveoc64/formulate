@@ -1531,8 +1531,27 @@ func setFromFloat(target reflect.Value, v float64) {
 	}
 }
 
-func (f *EditForm) Get(c string) *dom.Element {
+func (f *EditForm) Get(model string) *dom.Element {
 	w := dom.GetWindow()
 	doc := w.Document()
-	el := doc.QuerySelector("c")
+	el := doc.QuerySelector(fmt.Sprintf("[name=%s]", model))
+}
+
+func (f *EditForm) ReadOnly(model string, r bool) {
+	el := f.Get(model)
+	if el != nil {
+		el.(*dom.HTMLInputElement).ReadOnly = r
+	} else {
+		print("Error: Cannot find field ", model)
+	}
+}
+
+func (f *EditForm) Class(model string) *dom.TokenList {
+	el := f.Get(model)
+	if el != nil {
+		return el.Class()
+	} else {
+		print("Error: Cannot find field ", model)
+		return nil
+	}
 }
