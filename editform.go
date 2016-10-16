@@ -1530,3 +1530,9 @@ func setFromFloat(target reflect.Value, v float64) {
 		// target.SetFloat(v)
 	}
 }
+
+func (f *EditForm) Get(c string) *dom.Element {
+	w := dom.GetWindow()
+	doc := w.Document()
+	el := doc.QuerySelector("c")
+}
