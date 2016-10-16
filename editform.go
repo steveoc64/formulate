@@ -69,16 +69,17 @@ type EditRow struct {
 }
 
 type EditForm struct {
-	Title    string
-	Icon     string
-	ID       int
-	Rows     []*EditRow
-	CancelCB func(dom.Event)
-	DeleteCB func(dom.Event)
-	SaveCB   func(dom.Event)
-	PrintCB  func(dom.Event)
-	ChangeCB func(dom.Event)
-	AttachCB func()
+	Title      string
+	Icon       string
+	ID         int
+	Rows       []*EditRow
+	CancelCB   func(dom.Event)
+	DeleteCB   func(dom.Event)
+	SaveCB     func(dom.Event)
+	PrintCB    func(dom.Event)
+	ChangeCB   func(dom.Event)
+	AttachCB   func()
+	IsRendered bool
 }
 
 type Swapper struct {
@@ -322,41 +323,60 @@ func (f *EditForm) SetSelectOptions(name string,
 func (f *EditForm) New(icon string, title string) *EditForm {
 	f.Title = title
 	f.Icon = icon
+	f.IsRendered = false
 	return f
 }
 
 // Associate a cancel event with the editform
 func (f *EditForm) CancelEvent(c func(dom.Event)) *EditForm {
+	if f.IsRendered {
+		print("ERROR: CancelEvent() called after render")
+	}
 	f.CancelCB = c
 	return f
 }
 
 // Associate a delete event with the editform
 func (f *EditForm) DeleteEvent(c func(dom.Event)) *EditForm {
+	if f.IsRendered {
+		print("ERROR: DeleteEvent() called after render")
+	}
 	f.DeleteCB = c
 	return f
 }
 
 // Associate a save event with the editform
 func (f *EditForm) SaveEvent(c func(dom.Event)) *EditForm {
+	if f.IsRendered {
+		print("ERROR: SaveEvent() called after render")
+	}
 	f.SaveCB = c
 	return f
 }
 
 // Associate a callback on an attachment
 func (f *EditForm) AttachEvent(c func()) *EditForm {
+	if f.IsRendered {
+		print("ERROR: AttachEvent() called after render")
+	}
 	f.AttachCB = c
 	return f
 }
 
 // Associate a print event with the editform
 func (f *EditForm) PrintEvent(c func(dom.Event)) *EditForm {
+	if f.IsRendered {
+		print("ERROR: PrintEvent() called after render")
+	}
 	f.PrintCB = c
 	return f
 }
 
 // Associate a change event with the editform .. for autosaves
 func (f *EditForm) ChangeEvent(c func(dom.Event)) *EditForm {
+	if f.IsRendered {
+		print("ERROR: ChangeEvent() called after render")
+	}
 	f.ChangeCB = c
 	return f
 }
@@ -752,6 +772,7 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 
 	w := dom.GetWindow()
 	doc := w.Document()
+	f.IsRendered = true
 
 	// Tricky part here - if data is passed in, then
 	// load the field values from the data
@@ -968,19 +989,19 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 			el.AddEventListener("click", false, f.CancelCB)
 		}
 
-		if el := doc.QuerySelector(".grid-form"); el != nil {
-			el.AddEventListener("keyup", false, func(evt dom.Event) {
-				kevt, isKB := evt.(*dom.KeyboardEvent)
-				if isKB && kevt != nil {
-					if kevt.KeyCode == 27 {
-						evt.PreventDefault()
-						if f.CancelCB != nil {
-							f.CancelCB(evt)
-						}
-					}
-				}
-			})
-		}
+		// if el := doc.QuerySelector(".grid-form"); el != nil {
+		// 	el.AddEventListener("keyup", false, func(evt dom.Event) {
+		// 		kevt, isKB := evt.(*dom.KeyboardEvent)
+		// 		if isKB && kevt != nil {
+		// 			if kevt.KeyCode == 27 {
+		// 				evt.PreventDefault()
+		// 				if f.CancelCB != nil {
+		// 					f.CancelCB(evt)
+		// 				}
+		// 			}
+		// 		}
+		// 	})
+		// }
 	}
 
 	if f.DeleteCB != nil {
@@ -1532,6 +1553,10 @@ func setFromFloat(target reflect.Value, v float64) {
 }
 
 func (f *EditForm) Get(model string) dom.Element {
+	if !f.IsRendered {
+		print("ERROR: Get(" + model + ") called Before form is rendered")
+		return nil
+	}
 	w := dom.GetWindow()
 	doc := w.Document()
 	el := doc.QuerySelector(fmt.Sprintf("[name=%s]", model))
@@ -1585,6 +1610,21 @@ func (f *EditForm) Focus(model string) {
 	el := f.Get(model)
 	if el != nil {
 		el.(*dom.HTMLInputElement).Focus()
+	}
+}
+
+func (f *EditForm) FocusSelect(model string) {
+	el := f.Get(model).(*dom.HTMLInputElement)
+	if el != nil {
+		el.Focus()
+		el.Select()
+	}
+}
+
+func (f *EditForm) OnEvent(model string, event string, cb func(dom.Event)) {
+	el := f.Get(model)
+	if el != nil {
+		el.AddEventListener(event, false, cb)
 	}
 }
 
