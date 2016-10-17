@@ -115,6 +115,18 @@ func (f *ListForm) DateColumn(heading string, model string) *ListForm {
 	return f
 }
 
+// Add a colunm to the listform in Email Format
+func (f *ListForm) AvatarColumn(heading string, model string) *ListForm {
+	c := &ListCol{
+		Heading:  heading,
+		Model:    model,
+		Format:   "avatar",
+		MaxChars: f.MaxChars,
+	}
+	f.Cols = append(f.Cols, c)
+	return f
+}
+
 // Add a colunm to the listform in Img Format
 func (f *ListForm) ImgColumn(heading string, model string) *ListForm {
 	c := &ListCol{
@@ -334,6 +346,9 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 					width, col.Format, col.Model)
 			} else if col.Format == "date" {
 				src += fmt.Sprintf("<td %s>{{if .%s}}{{.%s.Format \"Mon, Jan 2 2006\"}}{{end}}</td>\n",
+					width, col.Model, col.Model)
+			} else if col.Format == "avatar" {
+				src += fmt.Sprintf("<td %s>{{if .%s}}<img src=\"{{.GetAvatar 40}}\"> {{.%s}}{{end}}</td>\n",
 					width, col.Model, col.Model)
 			} else {
 				if col.Format != "" {
