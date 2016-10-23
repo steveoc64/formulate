@@ -18,6 +18,7 @@ type ListCol struct {
 	Fieldname string
 	IsBool    bool
 	MaxChars  int
+	IsIcon    bool
 }
 
 type ListForm struct {
@@ -171,6 +172,18 @@ func (f *ListForm) BoolColumn(heading string, model string) *ListForm {
 		Heading: heading,
 		Model:   model,
 		IsBool:  true,
+	}
+	f.Cols = append(f.Cols, c)
+	f.HasImages = true
+	return f
+}
+
+// Add a colunm with a custom icon
+func (f *ListForm) IconColumn(heading string, model string) *ListForm {
+	c := &ListCol{
+		Heading: heading,
+		Model:   model,
+		IsIcon:  true,
 	}
 	f.Cols = append(f.Cols, c)
 	f.HasImages = true
@@ -355,6 +368,9 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 				}
 			} else if col.IsBool {
 				src += fmt.Sprintf("<td %s %s>{{if .%s}}<i class=\"fa fa-check fa-lg\">{{end}}</td>\n",
+					width, col.Format, col.Model)
+			} else if col.IsIcon {
+				src += fmt.Sprintf("<td %s %s><i class=\"{{.%s}}\"></td>\n",
 					width, col.Format, col.Model)
 			} else if col.Format == "date" {
 				src += fmt.Sprintf("<td %s>{{if .%s}}{{.%s.Format \"Mon, Jan 2 2006\"}}{{end}}</td>\n",
