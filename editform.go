@@ -1052,6 +1052,9 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 			el.AddEventListener("click", false, f.PrintCB)
 		}
 	}
+
+	// Scroll to the top
+	w.Scroll(0, 0)
 }
 
 // Add actions
