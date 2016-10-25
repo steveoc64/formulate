@@ -282,6 +282,7 @@ func (f *ListForm) decorate(selector string) {
 
 func (f *ListForm) generateTemplate(name string) *temple.Template {
 
+	isMobile := dom.GetWindow().InnerWidth() < 740
 	tmpl, err := generatedTemplates.GetTemplate(name)
 	if err != nil {
 		// print("Generating template for", name)
@@ -373,8 +374,14 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 				src += fmt.Sprintf("<td %s %s><i class=\"{{.%s}}\"></td>\n",
 					width, col.Format, col.Model)
 			} else if col.Format == "date" {
-				src += fmt.Sprintf("<td %s>{{if .%s}}{{.%s.Format \"Mon, Jan 2 2006\"}}{{end}}</td>\n",
-					width, col.Model, col.Model)
+				if isMobile {
+					print("is a date col on mobile layout")
+					src += fmt.Sprintf("<td %s>{{if .%s}}{{.%s.Format \"2 Jan\"}}{{end}}</td>\n",
+						width, col.Model, col.Model)
+				} else {
+					src += fmt.Sprintf("<td %s>{{if .%s}}{{.%s.Format \"Mon, Jan 2 2006\"}}{{end}}</td>\n",
+						width, col.Model, col.Model)
+				}
 			} else if col.Format == "avatar" {
 				src += fmt.Sprintf("<td %s>{{if .%s}}<img src=\"{{.GetAvatar 64}}\">{{end}}</td>\n",
 					width, col.Model)
