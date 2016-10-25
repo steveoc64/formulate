@@ -1631,6 +1631,10 @@ func (f *EditForm) OnEvent(model string, event string, cb func(dom.Event)) {
 	}
 }
 
+func (f *EditForm) AppendDiv(name string) *dom.HTMLDivElement {
+	return AppendDiv(name)
+}
+
 func AppendDiv(name string) *dom.HTMLDivElement {
 	w := dom.GetWindow()
 	doc := w.Document()
