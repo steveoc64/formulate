@@ -241,7 +241,8 @@ func (p *Panel) Paint(data interface{}) {
 					case "select":
 						if f.Readonly {
 							el := doc.QuerySelector(fmt.Sprintf("[name=%s-%s]", p.Name, f.Model)).(*dom.HTMLInputElement)
-							el.Value = fmt.Sprintf("%s of %v", f.Value, f.Options)
+							v, _ := strconv.Atoi(f.Value)
+							el.Value = fmt.Sprintf("%s", f.Options[v].Display)
 						} else {
 							el := doc.QuerySelector(fmt.Sprintf("[name=%s-%s]", p.Name, f.Model)).(*dom.HTMLSelectElement)
 							el.Value = f.Value
