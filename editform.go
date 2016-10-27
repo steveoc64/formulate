@@ -365,10 +365,12 @@ func (f *EditForm) AttachEvent(c func()) *EditForm {
 
 // Associate a print event with the editform
 func (f *EditForm) PrintEvent(c func(dom.Event)) *EditForm {
-	if f.IsRendered {
-		print("ERROR: PrintEvent() called after render")
+	if dom.GetWindow().InnerWidth() > 740 {
+		if f.IsRendered {
+			print("ERROR: PrintEvent() called after render")
+		}
+		f.PrintCB = c
 	}
-	f.PrintCB = c
 	return f
 }
 
@@ -1048,6 +1050,7 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 
 	// plug in the print callback
 	if f.PrintCB != nil {
+		// assume that if screen width is super small, then they are on a mobile, and therefore dont have print access
 		if el := doc.QuerySelector(".data-print-btn"); el != nil {
 			el.AddEventListener("click", false, f.PrintCB)
 		}
@@ -1613,6 +1616,28 @@ func (f *EditForm) Focus(model string) {
 	el := f.Get(model)
 	if el != nil {
 		el.(*dom.HTMLInputElement).Focus()
+	}
+}
+
+func getDivOffset(el dom.Element) int {
+	retval := float64(0.0)
+	pel := el.(dom.HTMLElement).OffsetParent()
+	if pel != nil {
+		for {
+			retval += el.(dom.HTMLElement).OffsetTop()
+			el = el.(dom.HTMLElement).OffsetParent()
+			if el == nil {
+				return int(retval)
+			}
+		}
+	}
+	return int(retval)
+}
+
+func (f *EditForm) ScrollTo(model string) {
+	el := f.Get(model)
+	if el != nil {
+		dom.GetWindow().Scroll(0, getDivOffset(el))
 	}
 }
 
