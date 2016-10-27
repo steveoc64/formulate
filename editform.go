@@ -1662,12 +1662,32 @@ func (f *EditForm) AppendDiv(name string, class string) *dom.HTMLDivElement {
 	return div
 }
 
+func (f *EditForm) InsertDiv(name string, c string, before string) *dom.HTMLDivElement {
+	w := dom.GetWindow()
+	doc := w.Document()
+	div := doc.CreateElement("div").(*dom.HTMLDivElement)
+	div.SetID(name)
+	container := doc.QuerySelector(c)
+	container.InsertBefore(div, container.QuerySelector(before))
+	return div
+}
+
 func AppendDiv(name string) *dom.HTMLDivElement {
 	w := dom.GetWindow()
 	doc := w.Document()
 	div := doc.CreateElement("div").(*dom.HTMLDivElement)
 	div.SetID(name)
 	doc.QuerySelector("main").AppendChild(div)
+	return div
+}
+
+func InsertDiv(name string, c string, before string) *dom.HTMLDivElement {
+	w := dom.GetWindow()
+	doc := w.Document()
+	div := doc.CreateElement("div").(*dom.HTMLDivElement)
+	div.SetID(name)
+	container := doc.QuerySelector(c)
+	container.InsertBefore(div, container.QuerySelector(before))
 	return div
 }
 
