@@ -69,17 +69,18 @@ type EditRow struct {
 }
 
 type EditForm struct {
-	Title      string
-	Icon       string
-	ID         int
-	Rows       []*EditRow
-	CancelCB   func(dom.Event)
-	DeleteCB   func(dom.Event)
-	SaveCB     func(dom.Event)
-	PrintCB    func(dom.Event)
-	ChangeCB   func(dom.Event)
-	AttachCB   func()
-	IsRendered bool
+	Title       string
+	Icon        string
+	ID          int
+	Rows        []*EditRow
+	CancelCB    func(dom.Event)
+	DeleteCB    func(dom.Event)
+	SaveCB      func(dom.Event)
+	PrintCB     func(dom.Event)
+	ChangeCB    func(dom.Event)
+	AttachCB    func()
+	IsRendered  bool
+	DisplayMode bool
 }
 
 type Swapper struct {
@@ -238,8 +239,13 @@ func (p *Panel) Paint(data interface{}) {
 						el := doc.QuerySelector(fmt.Sprintf("[name=%s-%s]", p.Name, f.Model)).(*dom.HTMLTextAreaElement)
 						el.Value = f.Value
 					case "select":
-						el := doc.QuerySelector(fmt.Sprintf("[name=%s-%s]", p.Name, f.Model)).(*dom.HTMLSelectElement)
-						el.Value = f.Value
+						if f.Readonly {
+							el := doc.QuerySelector(fmt.Sprintf("[name=%s-%s]", p.Name, f.Model)).(*dom.HTMLInputElement)
+							el.Value = fmt.Sprintf("%s of %v", f.Value, f.Options)
+						} else {
+							el := doc.QuerySelector(fmt.Sprintf("[name=%s-%s]", p.Name, f.Model)).(*dom.HTMLSelectElement)
+							el.Value = f.Value
+						}
 					case "checkbox":
 						el := doc.QuerySelector(fmt.Sprintf("[name=%s-%s]", p.Name, f.Model)).(*dom.HTMLInputElement)
 						el.Checked = boolValue
@@ -798,6 +804,9 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 		if doit {
 			for _, row := range f.Rows {
 				for _, field := range row.Fields {
+					if f.DisplayMode {
+						field.Readonly = true
+					}
 					if field.Model != "" {
 						switch field.Type {
 						case "div":
@@ -853,42 +862,45 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 							// Swapper has a slice of panels, which has a slice of rows, with a slice of fields
 							for _, p := range field.Swapper.Panels {
 								for _, r := range p.Rows {
-									for _, f := range r.Fields {
+									for _, sf := range r.Fields {
+										if f.DisplayMode {
+											sf.Readonly = true
+										}
 										// print("render swapper field", f.Model)
-										dataField := reflect.Indirect(ptrVal).FieldByName(f.Model)
+										dataField := reflect.Indirect(ptrVal).FieldByName(sf.Model)
 										switch dataField.Kind() {
 										case reflect.Float64:
-											f.Value = fmt.Sprintf("%.2f", dataField.Float())
+											sf.Value = fmt.Sprintf("%.2f", dataField.Float())
 										case reflect.Int:
-											f.Value = fmt.Sprintf("%d", dataField.Int())
+											sf.Value = fmt.Sprintf("%d", dataField.Int())
 										case reflect.Ptr:
 											// print("odd case of a swapper field being a ptr", f.Model, f.Type)
-											switch f.Type {
+											switch sf.Type {
 											case "date":
-												f.Value = ""
+												sf.Value = ""
 												ptr := unsafe.Pointer(dataField.Pointer())
 												if ptr != nil {
 													t := *(*time.Time)(ptr)
-													f.Value = t.Format(rfc3339DateLayout)
+													sf.Value = t.Format(rfc3339DateLayout)
 												}
 											case "number":
-												f.Value = ""
+												sf.Value = ""
 												ptr := unsafe.Pointer(dataField.Pointer())
 												if ptr != nil {
-													if f.IsFloat {
+													if sf.IsFloat {
 														v := *(*float64)(ptr)
-														f.Value = fmt.Sprintf("%f", v)
+														sf.Value = fmt.Sprintf("%f", v)
 													} else {
 														v := *(*int)(ptr)
-														f.Value = fmt.Sprintf("%d", v)
+														sf.Value = fmt.Sprintf("%d", v)
 
 													}
 												}
 											}
 										case reflect.String:
-											f.Value = dataField.String()
+											sf.Value = dataField.String()
 										default:
-											f.Value = dataField.String()
+											sf.Value = dataField.String()
 										}
 									}
 								}
@@ -1634,10 +1646,29 @@ func getDivOffset(el dom.Element) int {
 	return int(retval)
 }
 
-func (f *EditForm) ScrollTo(model string) {
-	el := f.Get(model)
-	if el != nil {
-		dom.GetWindow().Scroll(0, getDivOffset(el))
+func (f *EditForm) ScrollToFit(must string, should string) {
+	el := f.Get(must)
+	el2 := f.Get(should)
+	w := dom.GetWindow()
+
+	if el != nil && el2 != nil {
+		topMust := getDivOffset(el)
+		topOf := getDivOffset(el2)
+		divSize := topOf - topMust
+		subtractoid := w.InnerHeight() - 50
+		if topOf > subtractoid {
+			topOf -= subtractoid
+			if divSize > subtractoid {
+				// whole thing wont fit on the screen, so scroll to top to the must element
+				w.Scroll(0, topMust)
+			} else {
+				// whole thing is less that the height of the screen, so anchor it to the botton
+				w.Scroll(0, topOf)
+			}
+
+		} else {
+			// do nothing - is already visible
+		}
 	}
 }
 
