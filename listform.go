@@ -19,6 +19,7 @@ type ListCol struct {
 	IsBool    bool
 	MaxChars  int
 	IsIcon    bool
+	CanEdit   bool
 }
 
 type ListForm struct {
@@ -152,6 +153,18 @@ func (f *ListForm) ImgColumn(heading string, model string) *ListForm {
 	return f
 }
 
+// Add a colunm that is edittable
+func (f *ListForm) EditColumn(heading string, model string) *ListForm {
+	c := &ListCol{
+		Heading: heading,
+		Model:   model,
+		CanEdit: true,
+	}
+	f.Cols = append(f.Cols, c)
+	f.HasImages = true
+	return f
+}
+
 // Add a colunm to the listform in Img Format
 func (f *ListForm) MultiImgColumn(heading string, model string, field string) *ListForm {
 	c := &ListCol{
@@ -257,15 +270,17 @@ func (f *ListForm) decorate(selector string) {
 		if f.RowCB != nil {
 			el.AddEventListener("click", false, func(evt dom.Event) {
 				evt.PreventDefault()
-				td := evt.Target()
-				tr := td.ParentElement()
 				// Fix the issue where the user clicked on some clickable element inside the row
 				// which adds an extra level which we dont usually need
-				if tr.TagName() == "TD" {
-					tr = tr.ParentElement()
+				el := evt.Target()
+				switch el.TagName() {
+				case "INPUT":
+					break
+				case "TD":
+					f.RowCB(el.ParentElement().GetAttribute("key"))
+				case "TR":
+					f.RowCB(el.GetAttribute("key"))
 				}
-				key := tr.GetAttribute("key")
-				f.RowCB(key)
 			})
 		}
 
@@ -388,6 +403,9 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 			} else if col.Format == "email-avatar" {
 				src += fmt.Sprintf("<td %s>{{if .%s}}<img src=\"{{.GetAvatar 40}}\"> {{.%s}}{{end}}</td>\n",
 					width, col.Model, col.Model)
+			} else if col.CanEdit {
+				src += fmt.Sprintf("<td %s>{{if .%s}}<input type=\"text\" value=\"{{.%s}}\">{{end}}</td>",
+					width, col.Model, col.Model)
 			} else {
 				if col.Format != "" {
 					src += fmt.Sprintf("<td class=\"{{.%s}}\">{{if .%s}}{{.%s}}{{end}}</td>\n",
@@ -447,8 +465,14 @@ func (f *ListForm) ActionGrid(template string, selector string, id interface{}, 
 		url := ai.(*dom.HTMLDivElement).GetAttribute("url")
 		if url != "" {
 			ai.AddEventListener("click", false, func(evt dom.Event) {
-				url := evt.CurrentTarget().GetAttribute("url")
-				cb(url)
+				if evt.Target().TagName() == "INPUT" {
+					evt.PreventDefault()
+					print("clicked on input field")
+				} else {
+					print("cliked not on input field")
+					url := evt.CurrentTarget().GetAttribute("url")
+					cb(url)
+				}
 			})
 		}
 	}
