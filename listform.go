@@ -206,20 +206,14 @@ func (f *ListForm) IconColumn(heading string, model string) *ListForm {
 func (f *ListForm) Render(name string, selector string, data interface{}) {
 
 	f.Data = data
-	renderTemplateT(f.generateTemplate(name), selector, f)
+	renderTemplateT(f.generateTemplate(name, true), selector, f)
 	f.decorate(selector)
+}
 
-	// if f.HasImages {
-	// 	print("has images")
-	// 	for k, v := range data.([]interface{}) {
-	// 		println("k,v", k, v)
-	// 	}
-	// 	// rows := data.([]interface{})
-	// 	// println("Add in image src")
-	// 	// for k, v := range rows {
-	// 	// 	println("row =", k, v)
-	// 	// }
-	// }
+func (f *ListForm) RenderNoContainer(name string, selector string, data interface{}) {
+	f.Data = data
+	renderTemplateT(f.generateTemplate(name, false), selector, f)
+	f.decorate(selector)
 }
 
 // Render the form using a custom template
@@ -295,7 +289,7 @@ func (f *ListForm) decorate(selector string) {
 	}
 }
 
-func (f *ListForm) generateTemplate(name string) *temple.Template {
+func (f *ListForm) generateTemplate(name string, container bool) *temple.Template {
 
 	isMobile := dom.GetWindow().InnerWidth() < 740
 	tmpl, err := generatedTemplates.GetTemplate(name)
@@ -312,7 +306,9 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 
 		if doTitle {
 
-			src += `
+			if container {
+
+				src += `
 <div class="data-container">
 	<div class="row data-table-header">
     <h3 class="column column-90" id="legend">
@@ -320,6 +316,15 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
       {{.Title}}
     </h3>
 `
+			} else {
+				src += `
+	<div class="row data-table-header">
+    <h3 class="column column-90" id="legend">
+      <i class="fa {{.Icon}} fa-lg" style="font-size: 3rem"></i> 
+      {{.Title}}
+    </h3>
+`
+			}
 			if f.NewRowCB != nil {
 				src += `
     <div class="column col-center">
@@ -417,7 +422,9 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 			}
 		}
 
-		src += `      
+		if container {
+
+			src += `      
     </tr>
 {{end}}  
   <tbody>
@@ -425,6 +432,15 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 </table>
 <div id="action-grid" class="no-print hidden"></div>
 `
+		} else {
+			src += `      
+    </tr>
+{{end}}  
+  <tbody>
+  </tbody>
+</table>
+`
+		}
 		if doTitle {
 			src += `
 </div>
@@ -448,6 +464,10 @@ func (f *ListForm) generateTemplate(name string) *temple.Template {
 
 // Add actions
 func (f *ListForm) ActionGrid(template string, selector string, id interface{}, cb func(string)) {
+	ActionGrid(template, selector, id, cb)
+}
+
+func (f *ListForm) OldActionGrid(template string, selector string, id interface{}, cb func(string)) {
 
 	// print("add action grid")
 	w := dom.GetWindow()

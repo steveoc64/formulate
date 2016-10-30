@@ -1075,10 +1075,20 @@ func (f *EditForm) Render(template string, selector string, data interface{}) {
 
 // Add actions
 func (f *EditForm) ActionGrid(template string, selector string, id interface{}, cb func(string)) {
+	ActionGrid(template, selector, id, cb)
+}
 
+func ActionGrid(template string, selector string, id interface{}, cb func(string)) {
 	// print("add action grid")
 	w := dom.GetWindow()
 	doc := w.Document()
+
+	el := doc.QuerySelector(selector)
+	if el == nil {
+		print("Could not find selector", selector)
+		return
+	}
+	el.Class().Remove("hidden")
 
 	renderTemplate(template, selector, id)
 	for _, ai := range doc.QuerySelectorAll(".action__item") {
@@ -1719,6 +1729,7 @@ func InsertDiv(name string, c string, before string) *dom.HTMLDivElement {
 	div := doc.CreateElement("div").(*dom.HTMLDivElement)
 	div.SetID(name)
 	container := doc.QuerySelector(c)
+	// print("insert ", name, "container", c, "before", before)
 	container.InsertBefore(div, container.QuerySelector(before))
 	return div
 }
