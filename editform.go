@@ -56,6 +56,22 @@ type EditField struct {
 	Thumbnail   bool
 }
 
+func (e *EditField) GetSelected() string {
+	key, err := strconv.Atoi(e.Value)
+	if err != nil {
+		print("err", err.Error())
+		return ""
+	}
+	if e.Type == "select" {
+		for _, v := range e.Options {
+			if v.Key == key {
+				return v.Display
+			}
+		}
+	}
+	return ""
+}
+
 type FileField struct {
 	Data     string
 	Filename string
@@ -241,8 +257,10 @@ func (p *Panel) Paint(data interface{}) {
 					case "select":
 						if f.Readonly {
 							el := doc.QuerySelector(fmt.Sprintf("[name=%s-%s]", p.Name, f.Model)).(*dom.HTMLInputElement)
-							v, _ := strconv.Atoi(f.Value)
-							el.Value = fmt.Sprintf("%s", f.Options[v].Display)
+							// v, _ := strconv.Atoi(f.Value)
+							print("painting panel selector with ", f.Value)
+							// el.Value = fmt.Sprintf("%s", f.Options[v].Display)
+							el.Value = f.GetSelected()
 						} else {
 							el := doc.QuerySelector(fmt.Sprintf("[name=%s-%s]", p.Name, f.Model)).(*dom.HTMLSelectElement)
 							el.Value = f.Value
