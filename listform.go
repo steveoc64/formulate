@@ -204,14 +204,19 @@ func (f *ListForm) IconColumn(heading string, model string) *ListForm {
 }
 
 func (f *ListForm) Render(name string, selector string, data interface{}) {
-
 	f.Data = data
+	if dom.GetWindow().Document().QuerySelector(selector) == nil {
+		return
+	}
 	renderTemplateT(f.generateTemplate(name, true), selector, f)
 	f.decorate(selector)
 }
 
 func (f *ListForm) RenderNoContainer(name string, selector string, data interface{}) {
 	f.Data = data
+	if dom.GetWindow().Document().QuerySelector(selector) == nil {
+		return
+	}
 	renderTemplateT(f.generateTemplate(name, false), selector, f)
 	f.decorate(selector)
 }
