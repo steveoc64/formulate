@@ -54,6 +54,7 @@ type EditField struct {
 	IsUploaded  bool
 	Preview     bool
 	Thumbnail   bool
+	Autofocus   bool
 }
 
 func (e *EditField) GetSelected() string {
@@ -445,12 +446,28 @@ func (r *EditRow) Add(span int, label string, t string, model string, extras str
 // Add a Text input
 func (r *EditRow) AddInput(span int, label string, model string) *EditRow {
 	f := &EditField{
-		Span:     span,
-		Label:    label,
-		Type:     "text",
-		Focusme:  false,
-		Model:    model,
-		Readonly: false,
+		Span:      span,
+		Label:     label,
+		Type:      "text",
+		Focusme:   false,
+		Model:     model,
+		Readonly:  false,
+		Autofocus: true,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
+// Add a Text input with autofocus
+func (r *EditRow) AddFocusInput(span int, label string, model string) *EditRow {
+	f := &EditField{
+		Span:      span,
+		Label:     label,
+		Type:      "text",
+		Focusme:   false,
+		Model:     model,
+		Readonly:  false,
+		Autofocus: true,
 	}
 	r.Fields = append(r.Fields, f)
 	return r
