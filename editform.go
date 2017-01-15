@@ -473,6 +473,20 @@ func (r *EditRow) AddFocusInput(span int, label string, model string) *EditRow {
 	return r
 }
 
+// Add a plain old image field
+func (r *EditRow) AddImage(span int, label string, model string) *EditRow {
+	f := &EditField{
+		Span:     span,
+		Label:    label,
+		Type:     "image",
+		Focusme:  false,
+		Model:    model,
+		Readonly: false,
+	}
+	r.Fields = append(r.Fields, f)
+	return r
+}
+
 // Add a Photo field. The Model must be of type FileField
 func (r *EditRow) AddPhoto(span int, label string, model string) *EditRow {
 	f := &EditField{

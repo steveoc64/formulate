@@ -208,6 +208,7 @@ func (f *ListForm) Render(name string, selector string, data interface{}) {
 	if dom.GetWindow().Document().QuerySelector(selector) == nil {
 		return
 	}
+	print("loading into selector", selector)
 	renderTemplateT(f.generateTemplate(name, true), selector, f)
 	f.decorate(selector)
 }
@@ -297,6 +298,7 @@ func (f *ListForm) decorate(selector string) {
 func (f *ListForm) generateTemplate(name string, container bool) *temple.Template {
 
 	isMobile := dom.GetWindow().InnerWidth() < 740
+	//print("looking for template", name)
 	tmpl, err := generatedTemplates.GetTemplate(name)
 	if err != nil {
 		// print("Generating template for", name)
