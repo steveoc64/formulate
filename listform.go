@@ -208,7 +208,7 @@ func (f *ListForm) Render(name string, selector string, data interface{}) {
 	if dom.GetWindow().Document().QuerySelector(selector) == nil {
 		return
 	}
-	print("loading into selector", selector)
+	// print("loading into selector", selector)
 	renderTemplateT(f.generateTemplate(name, true), selector, f)
 	f.decorate(selector)
 }
@@ -494,9 +494,9 @@ func (f *ListForm) OldActionGrid(template string, selector string, id interface{
 			ai.AddEventListener("click", false, func(evt dom.Event) {
 				if evt.Target().TagName() == "INPUT" {
 					evt.PreventDefault()
-					print("clicked on input field")
+					// print("clicked on input field")
 				} else {
-					print("cliked not on input field")
+					// print("cliked not on input field")
 					url := evt.CurrentTarget().GetAttribute("url")
 					cb(url)
 				}
